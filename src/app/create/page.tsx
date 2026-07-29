@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2 } from "lucide-react";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
@@ -57,53 +58,71 @@ export default function CreateAR() {
     <>
       <div className="bg-gradient-animated" />
       <div className="grid-overlay" />
+      <div className="noise-overlay" />
       
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", padding: "40px 24px" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "40px" }}>
-            <Link href="/" style={{ color: "rgba(232,232,240,0.5)", textDecoration: "none" }}>
-              ← Kembali
+            <Link href="/" className="btn-icon" style={{ textDecoration: "none" }}>
+              <ArrowLeft size={20} />
             </Link>
+            <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>Kembali ke Beranda</span>
           </div>
 
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
-            <h1 className="gradient-text" style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: "16px" }}>
-              Buat AR Anda
+            <h1 className="gradient-text-primary" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, marginBottom: "16px", letterSpacing: "-0.02em" }}>
+              Cloud AR Studio
             </h1>
-            <p style={{ color: "rgba(232,232,240,0.7)", fontSize: "1.1rem" }}>
-              Upload poster/gambar Anda. Kami akan mengubahnya menjadi target 3D.
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem", maxWidth: "500px", margin: "0 auto" }}>
+              Upload poster atau gambar Anda ke sistem Cloud kami untuk menghasilkan target 3D secara instan.
             </p>
           </div>
 
-          <div className="glass-card fade-in" style={{ padding: "40px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
+          <div className="glass-card fade-in" style={{ padding: "50px 30px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
             {!arUrl ? (
               <>
-                <div style={{ fontSize: "3rem", marginBottom: "20px" }}>🖼️</div>
-                <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
+                  <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
+                    <ImageIcon size={40} />
+                  </div>
+                </div>
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "24px" }}>
                   Pilih Gambar Target
                 </h2>
                 
                 {error && (
-                  <div style={{ background: "rgba(255, 50, 50, 0.1)", padding: "12px", borderRadius: "8px", color: "#ff8888", marginBottom: "20px", fontSize: "0.9rem" }}>
+                  <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "16px", borderRadius: "12px", color: "var(--danger)", marginBottom: "24px", fontSize: "0.95rem" }}>
                     {error}
                   </div>
                 )}
 
                 <label
+                  className={loading ? "" : "btn-primary"}
                   style={{
-                    display: "inline-block",
-                    padding: "16px 32px",
-                    background: loading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #6c63ff, #00d4ff)",
-                    color: "white",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "16px 36px",
+                    background: loading ? "rgba(255,255,255,0.05)" : undefined,
+                    color: loading ? "var(--text-tertiary)" : "white",
                     fontWeight: 600,
-                    borderRadius: "14px",
+                    borderRadius: "99px",
                     cursor: loading ? "not-allowed" : "pointer",
-                    transition: "all 0.3s",
-                    opacity: loading ? 0.7 : 1,
+                    border: loading ? "1px solid rgba(255,255,255,0.1)" : "none",
                   }}
                 >
-                  {loading ? "Meng-upload ke Internet..." : "📁 Upload Gambar"}
+                  {loading ? (
+                    <>
+                      <Loader2 size={20} className="spin-animation" /> 
+                      Mengunggah ke Cloud...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={20} />
+                      Upload Gambar Target
+                    </>
+                  )}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
@@ -114,10 +133,20 @@ export default function CreateAR() {
                 </label>
                 
                 {loading && (
-                  <p style={{ marginTop: "20px", fontSize: "0.9rem", color: "rgba(232,232,240,0.5)" }}>
-                    Sedang memproses gambar Anda agar bisa diakses dari HP mana pun...
+                  <p style={{ marginTop: "24px", fontSize: "0.9rem", color: "var(--text-tertiary)" }}>
+                    Sistem sedang memproses gambar Anda melalui jaringan ImgBB agar dapat diakses secara global...
                   </p>
                 )}
+                
+                <style>{`
+                  .spin-animation {
+                    animation: spin 1s linear infinite;
+                  }
+                  @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
               </>
             ) : (
               <div className="fade-in">
@@ -125,9 +154,9 @@ export default function CreateAR() {
                 <button 
                   onClick={() => { setArUrl(null); setTargetImage(null); }}
                   className="btn-secondary"
-                  style={{ marginTop: "20px", width: "100%" }}
+                  style={{ marginTop: "30px", width: "100%" }}
                 >
-                  Buat AR Lainnya
+                  <UploadCloud size={18} /> Buat AR Baru
                 </button>
               </div>
             )}
