@@ -63,6 +63,7 @@ body {
   z-index: -2;
   overflow: hidden;
   pointer-events: none;
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 .bg-gradient-animated::before {
@@ -77,20 +78,17 @@ body {
     radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
     radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 50%);
   animation: slowPan 25s ease-in-out infinite alternate;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 @keyframes slowPan {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-5%, 5%) scale(1.05); }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-5%, 5%, 0) scale(1.05); }
 }
 
 .noise-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  display: none; /* SVG feTurbulence is too heavy for scrolling performance */
 }
 
 .grid-overlay {
@@ -104,6 +102,7 @@ body {
   background-size: 80px 80px;
   mask-image: radial-gradient(circle at center, black, transparent 80%);
   -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+  transform: translateZ(0);
 }
 
 /* ===== GLASSMORPHISM CARDS ===== */
@@ -116,6 +115,8 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
 }
 
 .glass-card::before {
@@ -131,7 +132,7 @@ body {
 .glass-card:hover {
   background: var(--glass-hover);
   border-color: var(--glass-border-hover);
-  transform: translateY(-4px);
+  transform: translateY(-4px) translateZ(0);
   box-shadow: 0 24px 40px -10px rgba(0,0,0,0.5), 0 0 20px rgba(59, 130, 246, 0.1);
 }
 
@@ -180,6 +181,7 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  transform: translateZ(0);
 }
 
 .btn-primary::before {
@@ -192,7 +194,7 @@ body {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px) scale(1.02) translateZ(0);
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.4);
 }
 
@@ -216,12 +218,13 @@ body {
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
+  transform: translateZ(0);
 }
 
 .btn-secondary:hover {
   border-color: rgba(255,255,255,0.3);
   background: rgba(255,255,255,0.08);
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
@@ -237,29 +240,31 @@ body {
   color: var(--text-secondary);
   transition: all 0.3s;
   cursor: pointer;
+  transform: translateZ(0);
 }
 
 .btn-icon:hover {
   background: rgba(255,255,255,0.1);
   color: white;
   border-color: rgba(255,255,255,0.2);
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
 }
 
 /* ===== FLOATING ORBS ===== */
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
   opacity: 0.4;
   animation: orbFloat 10s ease-in-out infinite alternate;
   pointer-events: none;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .orb-1 {
   width: 400px;
   height: 400px;
-  background: var(--primary);
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
   top: -10%;
   right: -5%;
 }
@@ -267,15 +272,15 @@ body {
 .orb-2 {
   width: 300px;
   height: 300px;
-  background: var(--secondary);
+  background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
   bottom: -10%;
   left: -5%;
   animation-delay: -5s;
 }
 
 @keyframes orbFloat {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(50px, -50px) scale(1.1); }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(50px, -50px, 0) scale(1.1); }
 }
 
 /* ===== FEATURE ICON ===== */
