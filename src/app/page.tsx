@@ -119,12 +119,12 @@ export default function Home() {
             </div>
             
             {/* Manual button for testing on mobile */}
-            <div className="fade-in fade-in-delay-3" style={{ marginTop: "20px" }}>
-              <p style={{ color: "rgba(232,232,240,0.4)", fontSize: "0.85rem", marginBottom: "10px" }}>
-                Atau jika Anda sedang membuka ini di HP:
-              </p>
+            <div className="fade-in fade-in-delay-3" style={{ marginTop: "20px", display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
+              <Link href="/create" className="btn-primary" style={{ padding: "10px 24px", fontSize: "0.9rem" }}>
+                📸 Buat AR Anda
+              </Link>
               <Link href="/ar" className="btn-secondary" style={{ padding: "10px 24px", fontSize: "0.9rem" }}>
-                Buka Kamera AR Langsung
+                Buka Kamera AR
               </Link>
             </div>
           </div>

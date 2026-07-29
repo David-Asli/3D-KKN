@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import QRCode from "qrcode";
-import { compileImageTarget } from "../lib/compiler";
+import { compileImageTarget, imageDataUrlToHTMLImage } from "../lib/compiler";
 
 const ARScene = dynamic(() => import("../components/ARScene"), {
   ssr: false,
@@ -46,50 +46,42 @@ function LoadingScreen() {
 }
 
 function ARPageContent() {
+  const searchParams = useSearchParams();
+  const imgUrl = searchParams.get("img");
+
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [compiledData, setCompiledData] = useState<ArrayBuffer | null>(null);
   const [compiledImageSrc, setCompiledImageSrc] = useState<string | null>(null);
 
-  // Generate QR Code dynamically and compile it into a target
+  // Generate or Load target dynamically
   useEffect(() => {
     let isCancelled = false;
 
     const prepareTarget = async () => {
       try {
-        const url = `${window.location.origin}/ar`;
-        
-        // Generate QR code data URL
-        const dataUrl = await QRCode.toDataURL(url, {
-          width: 512,
-          margin: 2,
-          color: { dark: "#000000", light: "#ffffff" },
-        });
+        if (!imgUrl) {
+          // If no custom image provided, we just exit loading and let it fallback to default target
+          setLoading(false);
+          return;
+        }
 
+        setCompiledImageSrc(imgUrl);
+
+        // Load into HTML Image with CORS enabled
+        const img = await imageDataUrlToHTMLImage(imgUrl);
         if (isCancelled) return;
-        setCompiledImageSrc(dataUrl);
 
-        // Load into HTML Image
-        const img = new Image();
-        img.onload = async () => {
-          if (isCancelled) return;
-          try {
-            // Compile to .mind format
-            const mindBuffer = await compileImageTarget(img, (p) => {
-              setProgress(Math.round(p * 100));
-            });
-            
-            if (isCancelled) return;
-            setCompiledData(mindBuffer);
-            setLoading(false);
-          } catch (err) {
-            console.error("Compile error:", err);
-            setLoading(false);
-          }
-        };
-        img.src = dataUrl;
+        // Compile to .mind format
+        const mindBuffer = await compileImageTarget(img, (p) => {
+          setProgress(Math.round(p * 100));
+        });
+        
+        if (isCancelled) return;
+        setCompiledData(mindBuffer);
+        setLoading(false);
       } catch (err) {
-        console.error("QR Code generation error:", err);
+        console.error("Target compilation error:", err);
         setLoading(false);
       }
     };
@@ -99,7 +91,7 @@ function ARPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [imgUrl]);
 
   // Show compiling progress
   if (loading) {
@@ -144,7 +136,7 @@ function ARPageContent() {
           }}
         />
         <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-          Menganalisis QR Code... {progress}%
+          Menganalisis Gambar Target... {progress}%
         </p>
         <div
           style={{
@@ -173,7 +165,7 @@ function ARPageContent() {
     );
   }
 
-  // Render AR Scene
+  // Render AR Scene with custom target
   if (compiledData) {
     return (
       <ARScene
@@ -183,8 +175,8 @@ function ARPageContent() {
     );
   }
 
-  // Fallback if something failed
-  return <LoadingScreen />;
+  // Fallback to default demo target
+  return <ARScene mindSrc="/targets.mind" />;
 }
 
 export default function ARPage() {
