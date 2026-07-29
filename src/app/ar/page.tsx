@@ -1,14 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { getTarget, type ARTarget } from "../lib/storage";
-import {
-  compileImageTarget,
-  imageFileToHTMLImage,
-  fileToDataUrl,
-} from "../lib/compiler";
+import QRCode from "qrcode";
+import { compileImageTarget } from "../lib/compiler";
 
 const ARScene = dynamic(() => import("../components/ARScene"), {
   ssr: false,
@@ -51,80 +46,63 @@ function LoadingScreen() {
 }
 
 function ARPageContent() {
-  const searchParams = useSearchParams();
-  const targetId = searchParams.get("id");
-
-  const [target, setTarget] = useState<ARTarget | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [compiling, setCompiling] = useState(false);
   const [progress, setProgress] = useState(0);
   const [compiledData, setCompiledData] = useState<ArrayBuffer | null>(null);
   const [compiledImageSrc, setCompiledImageSrc] = useState<string | null>(null);
 
-  // Load target from IndexedDB
+  // Generate QR Code dynamically and compile it into a target
   useEffect(() => {
-    const loadTarget = async () => {
-      if (!targetId) {
-        // No ID — use default demo target
-        setLoading(false);
-        return;
-      }
+    let isCancelled = false;
 
+    const prepareTarget = async () => {
       try {
-        const result = await getTarget(targetId);
-        if (result) {
-          setTarget(result);
-        } else {
-          setNotFound(true);
-        }
-      } catch (err) {
-        console.error("Error loading target:", err);
-        setNotFound(true);
-      }
-      setLoading(false);
-    };
-
-    loadTarget();
-  }, [targetId]);
-
-  // Handle fallback upload (when target not found in IndexedDB)
-  const handleFallbackUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      try {
-        setCompiling(true);
-        setProgress(0);
-
-        const dataUrl = await fileToDataUrl(file);
-        setCompiledImageSrc(dataUrl);
-
-        const img = await imageFileToHTMLImage(file);
-        const mindBuffer = await compileImageTarget(img, (p) => {
-          setProgress(Math.round(p * 100));
+        const url = `${window.location.origin}/ar`;
+        
+        // Generate QR code data URL
+        const dataUrl = await QRCode.toDataURL(url, {
+          width: 512,
+          margin: 2,
+          color: { dark: "#000000", light: "#ffffff" },
         });
 
-        setCompiledData(mindBuffer);
-        setNotFound(false);
-        setCompiling(false);
+        if (isCancelled) return;
+        setCompiledImageSrc(dataUrl);
+
+        // Load into HTML Image
+        const img = new Image();
+        img.onload = async () => {
+          if (isCancelled) return;
+          try {
+            // Compile to .mind format
+            const mindBuffer = await compileImageTarget(img, (p) => {
+              setProgress(Math.round(p * 100));
+            });
+            
+            if (isCancelled) return;
+            setCompiledData(mindBuffer);
+            setLoading(false);
+          } catch (err) {
+            console.error("Compile error:", err);
+            setLoading(false);
+          }
+        };
+        img.src = dataUrl;
       } catch (err) {
-        console.error("Compile error:", err);
-        alert("Gagal compile gambar. Coba lagi.");
-        setCompiling(false);
+        console.error("QR Code generation error:", err);
+        setLoading(false);
       }
-    },
-    []
-  );
+    };
 
-  // Loading state
+    prepareTarget();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  // Show compiling progress
   if (loading) {
-    return <LoadingScreen />;
-  }
-
-  // Compiling fallback image
-  if (compiling) {
     return (
       <div
         style={{
@@ -146,11 +124,12 @@ function ARPageContent() {
             src={compiledImageSrc}
             alt="Target"
             style={{
-              width: "100px",
-              height: "100px",
+              width: "120px",
+              height: "120px",
               objectFit: "cover",
               borderRadius: "12px",
               border: "2px solid rgba(108,99,255,0.3)",
+              background: "white",
             }}
           />
         )}
@@ -165,7 +144,7 @@ function ARPageContent() {
           }}
         />
         <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-          Compiling AR Target... {progress}%
+          Menganalisis QR Code... {progress}%
         </p>
         <div
           style={{
@@ -186,82 +165,15 @@ function ARPageContent() {
             }}
           />
         </div>
+        <p style={{ fontSize: "0.85rem", color: "rgba(232,232,240,0.4)" }}>
+          Membuat pelacak 3D (hanya butuh waktu sebentar)
+        </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  // Target not found — show upload fallback
-  if (notFound && !compiledData) {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#050510",
-          color: "#e8e8f0",
-          gap: "24px",
-          fontFamily: "'Inter', sans-serif",
-          padding: "24px",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: "4rem" }}>📸</div>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>
-          Upload Gambar Target
-        </h2>
-        <p
-          style={{
-            color: "rgba(232,232,240,0.5)",
-            maxWidth: "400px",
-            lineHeight: 1.6,
-          }}
-        >
-          AR target tidak ditemukan di perangkat ini. Upload gambar target yang
-          sama untuk memulai AR experience.
-        </p>
-        <label
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "16px 32px",
-            background: "linear-gradient(135deg, #6c63ff, #00d4ff)",
-            color: "white",
-            fontWeight: 600,
-            borderRadius: "14px",
-            cursor: "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          📁 Pilih Gambar
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={handleFallbackUpload}
-            style={{ display: "none" }}
-          />
-        </label>
-        <a
-          href="/"
-          style={{
-            color: "rgba(232,232,240,0.4)",
-            fontSize: "0.9rem",
-            textDecoration: "none",
-          }}
-        >
-          ← Kembali ke beranda
-        </a>
-      </div>
-    );
-  }
-
   // Render AR Scene
-  // Priority: compiled data (from fallback upload) → target from IndexedDB → default
   if (compiledData) {
     return (
       <ARScene
@@ -271,17 +183,8 @@ function ARPageContent() {
     );
   }
 
-  if (target) {
-    return (
-      <ARScene
-        mindData={target.mindData}
-        targetImageSrc={target.imageDataUrl}
-      />
-    );
-  }
-
-  // Default — use demo target
-  return <ARScene mindSrc="/targets.mind" />;
+  // Fallback if something failed
+  return <LoadingScreen />;
 }
 
 export default function ARPage() {
