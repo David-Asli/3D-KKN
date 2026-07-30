@@ -16,13 +16,14 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const blob = await put(filename, request.body, {
       access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN, // Explicitly pass the token
     });
 
     return NextResponse.json(blob);
   } catch (error: any) {
     console.error('Blob upload error:', error);
     return NextResponse.json(
-      { error: 'Gagal mengupload file ke Blob Storage' },
+      { error: `Gagal upload: ${error.message || error}` },
       { status: 500 }
     );
   }

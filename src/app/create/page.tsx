@@ -70,7 +70,7 @@ export default function CreateAR() {
         const blob = await response.json();
         
         if (!response.ok || !blob.url) {
-          throw new Error("Gagal meng-upload file 3D ke Blob Storage.");
+          throw new Error(blob.error || "Gagal meng-upload file 3D ke Blob Storage.");
         }
         cloudModelUrl = blob.url;
       }
