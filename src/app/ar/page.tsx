@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { compileImageTarget, imageDataUrlToHTMLImage } from "../lib/compiler";
+import { compileImageTarget, imageDataUrlToHTMLImage, resizeImage } from "../lib/compiler";
 
 const ARScene = dynamic(() => import("../components/ARScene"), {
   ssr: false,
@@ -53,6 +53,7 @@ function ARPageContent() {
   const [progress, setProgress] = useState(0);
   const [compiledData, setCompiledData] = useState<ArrayBuffer | null>(null);
   const [compiledImageSrc, setCompiledImageSrc] = useState<string | null>(null);
+  const [compilationError, setCompilationError] = useState<string | null>(null);
 
   // Generate or Load target dynamically
   useEffect(() => {
@@ -68,20 +69,26 @@ function ARPageContent() {
 
         setCompiledImageSrc(imgUrl);
 
-        // Load into HTML Image with CORS enabled
-        const img = await imageDataUrlToHTMLImage(imgUrl);
+        // Fetch through proxy to avoid strict mobile CORS tracking prevention
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+        const img = await imageDataUrlToHTMLImage(proxyUrl);
+        if (isCancelled) return;
+
+        // Resize the image down to save memory (prevents WebGL crash on mobile devices)
+        const resizedImg = await resizeImage(img, 800);
         if (isCancelled) return;
 
         // Compile to .mind format
-        const mindBuffer = await compileImageTarget(img, (p) => {
+        const mindBuffer = await compileImageTarget(resizedImg, (p) => {
           setProgress(Math.round(p * 100));
         });
         
         if (isCancelled) return;
         setCompiledData(mindBuffer);
         setLoading(false);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Target compilation error:", err);
+        setCompilationError(err.message || "Gagal memproses gambar target. HP mungkin kehabisan memori atau koneksi terputus.");
         setLoading(false);
       }
     };
@@ -92,6 +99,44 @@ function ARPageContent() {
       isCancelled = true;
     };
   }, [imgUrl]);
+
+  // Show error if compilation fails
+  if (compilationError) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#050510",
+          color: "#e8e8f0",
+          gap: "20px",
+          fontFamily: "'Inter', sans-serif",
+          padding: "24px",
+          textAlign: "center"
+        }}
+      >
+        <div style={{ color: "#ff4444", fontSize: "48px" }}>⚠️</div>
+        <h2 style={{ margin: 0 }}>Gagal Memuat Target</h2>
+        <p style={{ color: "rgba(255,255,255,0.7)" }}>{compilationError}</p>
+        <p style={{ fontSize: "0.9em", color: "rgba(255,255,255,0.5)" }}>
+          Sistem gagal memproses target pada perangkat ini. Cobalah menggunakan HP dengan spesifikasi lebih tinggi, atau pastikan koneksi internet stabil.
+        </p>
+        <a href="/" style={{
+          marginTop: "20px",
+          padding: "10px 24px",
+          background: "#6c63ff",
+          color: "white",
+          textDecoration: "none",
+          borderRadius: "8px",
+          fontWeight: "bold"
+        }}>Kembali ke Beranda</a>
+      </div>
+    );
+  }
 
   // Show compiling progress
   if (loading) {

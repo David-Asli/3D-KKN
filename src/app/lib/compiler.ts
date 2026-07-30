@@ -95,3 +95,35 @@ export function fileToDataUrl(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+export function resizeImage(img: HTMLImageElement, maxSize: number = 1000): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+      if (width > maxSize) {
+        height = Math.round(height * (maxSize / width));
+        width = maxSize;
+      }
+    } else {
+      if (height > maxSize) {
+        width = Math.round(width * (maxSize / height));
+        height = maxSize;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(img, 0, 0, width, height);
+    }
+
+    const resizedImg = new Image();
+    resizedImg.onload = () => resolve(resizedImg);
+    resizedImg.src = canvas.toDataURL("image/jpeg", 0.8);
+  });
+}
+
