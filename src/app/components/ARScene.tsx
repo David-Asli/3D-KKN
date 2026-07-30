@@ -98,50 +98,20 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc }: ARScenePr
     const target = document.createElement("a-entity");
     target.setAttribute("mindar-image-target", "targetIndex: 0");
 
-    // Main box
-    const box = document.createElement("a-box");
-    box.setAttribute("position", "0 0.15 0");
-    box.setAttribute("scale", "0.3 0.3 0.3");
-    box.setAttribute("color", "#6c63ff");
-    box.setAttribute("opacity", "0.9");
-    box.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear;");
-    box.setAttribute("animation__scale", "property: scale; from: 0.3 0.3 0.3; to: 0.35 0.35 0.35; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine;");
-    target.appendChild(box);
-
-    // Floating sphere 1
-    const sphere1 = document.createElement("a-sphere");
-    sphere1.setAttribute("position", "0.4 0.3 0");
-    sphere1.setAttribute("radius", "0.08");
-    sphere1.setAttribute("color", "#00d4ff");
-    sphere1.setAttribute("opacity", "0.8");
-    sphere1.setAttribute("animation", "property: position; to: 0.4 0.45 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine;");
-    target.appendChild(sphere1);
-
-    // Floating sphere 2
-    const sphere2 = document.createElement("a-sphere");
-    sphere2.setAttribute("position", "-0.4 0.3 0");
-    sphere2.setAttribute("radius", "0.06");
-    sphere2.setAttribute("color", "#ff6b9d");
-    sphere2.setAttribute("opacity", "0.8");
-    sphere2.setAttribute("animation", "property: position; to: -0.4 0.5 0; loop: true; dur: 2500; dir: alternate; easing: easeInOutSine;");
-    target.appendChild(sphere2);
-
-    // Ring
-    const ring = document.createElement("a-entity");
-    ring.setAttribute("geometry", "primitive: torus; radius: 0.35; radiusTubular: 0.01;");
-    ring.setAttribute("material", "color: #6c63ff; opacity: 0.4;");
-    ring.setAttribute("position", "0 0.15 0");
-    ring.setAttribute("animation", "property: rotation; from: 90 0 0; to: 90 360 0; loop: true; dur: 6000; easing: linear;");
-    target.appendChild(ring);
-
-    // Second ring
-    const ring2 = document.createElement("a-entity");
-    ring2.setAttribute("geometry", "primitive: torus; radius: 0.45; radiusTubular: 0.008;");
-    ring2.setAttribute("material", "color: #00d4ff; opacity: 0.25;");
-    ring2.setAttribute("position", "0 0.15 0");
-    ring2.setAttribute("rotation", "60 0 0");
-    ring2.setAttribute("animation", "property: rotation; from: 60 0 0; to: 60 360 0; loop: true; dur: 8000; easing: linear;");
-    target.appendChild(ring2);
+    // Custom 3D Model
+    const model = document.createElement("a-gltf-model");
+    model.setAttribute("src", "/Kursi.glb");
+    
+    // Sesuaikan scale, position, dan rotasi sesuai kebutuhan
+    // Nilai scale 0.5 bisa dibesarkan/dikecilkan tergantung ukuran asli Kursi.glb
+    model.setAttribute("scale", "0.5 0.5 0.5");
+    model.setAttribute("position", "0 0 0");
+    model.setAttribute("rotation", "0 0 0");
+    
+    // (Opsional) animasi rotasi perlahan agar terlihat dinamis
+    model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear;");
+    
+    target.appendChild(model);
 
     // Lights
     const ambientLight = document.createElement("a-light");
