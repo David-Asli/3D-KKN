@@ -48,6 +48,7 @@ function LoadingScreen() {
 function ARPageContent() {
   const searchParams = useSearchParams();
   const imgUrl = searchParams.get("img");
+  const modelUrl = searchParams.get("model");
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -210,12 +211,12 @@ function ARPageContent() {
     );
   }
 
-  // Render AR Scene with custom target
   if (compiledData) {
     return (
       <ARScene
         mindData={compiledData}
         targetImageSrc={compiledImageSrc || undefined}
+        modelUrl={modelUrl || undefined}
       />
     );
   }

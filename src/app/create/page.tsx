@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2 } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box } from "lucide-react";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
@@ -10,45 +10,81 @@ const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
 export default function CreateAR() {
   const [loading, setLoading] = useState(false);
   const [arUrl, setArUrl] = useState<string | null>(null);
-  const [targetImage, setTargetImage] = useState<string | null>(null);
+  
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedModel, setSelectedModel] = useState<File | null>(null);
+  
+  const [targetImagePreview, setTargetImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedImage(file);
+    setTargetImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedModel(file);
+  };
+
+  const handleUploadAndGenerate = async () => {
+    if (!selectedImage) {
+      setError("Silakan pilih gambar target terlebih dahulu.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setArUrl(null);
 
-    // Create a local preview immediately
-    const localUrl = URL.createObjectURL(file);
-    setTargetImage(localUrl);
-
     try {
-      // Prepare form data for ImgBB
-      const formData = new FormData();
-      formData.append("image", file);
+      let cloudImageUrl = "";
+      let cloudModelUrl = "";
 
-      // Upload to ImgBB
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      // 1. Upload to ImgBB
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+      const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
         method: "POST",
         body: formData,
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const cloudImageUrl = data.data.url;
-        // Generate the dynamic AR URL
-        const generatedUrl = `${window.location.origin}/ar?img=${encodeURIComponent(cloudImageUrl)}`;
-        setArUrl(generatedUrl);
-      } else {
-        setError("Gagal meng-upload gambar ke server. Coba lagi.");
+      const imgData = await imgRes.json();
+      
+      if (!imgData.success) {
+        throw new Error("Gagal meng-upload gambar ke server.");
       }
-    } catch (err) {
+      cloudImageUrl = imgData.data.url;
+
+      // 2. Upload to Vercel Blob (if 3D model is provided)
+      if (selectedModel) {
+        const response = await fetch(
+          `/api/upload-model?filename=${encodeURIComponent(selectedModel.name)}`,
+          {
+            method: 'POST',
+            body: selectedModel,
+          }
+        );
+        const blob = await response.json();
+        
+        if (!response.ok || !blob.url) {
+          throw new Error("Gagal meng-upload file 3D ke Blob Storage.");
+        }
+        cloudModelUrl = blob.url;
+      }
+
+      // 3. Generate AR URL
+      let generatedUrl = `${window.location.origin}/ar?img=${encodeURIComponent(cloudImageUrl)}`;
+      if (cloudModelUrl) {
+        generatedUrl += `&model=${encodeURIComponent(cloudModelUrl)}`;
+      }
+      
+      setArUrl(generatedUrl);
+    } catch (err: any) {
       console.error(err);
-      setError("Terjadi kesalahan jaringan.");
+      setError(err.message || "Terjadi kesalahan jaringan.");
     }
 
     setLoading(false);
@@ -82,13 +118,16 @@ export default function CreateAR() {
           <div className="glass-card fade-in" style={{ padding: "50px 30px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
             {!arUrl ? (
               <>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginBottom: "24px" }}>
                   <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
                     <ImageIcon size={40} />
                   </div>
+                  <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(0, 212, 255, 0.1)", border: "1px solid rgba(0, 212, 255, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#00d4ff" }}>
+                    <Box size={40} />
+                  </div>
                 </div>
                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "24px" }}>
-                  Pilih Gambar Target
+                  Pilih Gambar & Model 3D
                 </h2>
                 
                 {error && (
@@ -97,19 +136,37 @@ export default function CreateAR() {
                   </div>
                 )}
 
-                <label
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "32px", alignItems: "center" }}>
+                  {/* Image Input */}
+                  <label className="btn-secondary" style={{ display: "flex", width: "100%", maxWidth: "320px", justifyContent: "center", alignItems: "center", gap: "12px", padding: "14px", cursor: "pointer" }}>
+                    <ImageIcon size={20} />
+                    {selectedImage ? selectedImage.name : "1. Pilih Gambar Target"}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageChange} style={{ display: "none" }} />
+                  </label>
+                  
+                  {/* Model Input */}
+                  <label className="btn-secondary" style={{ display: "flex", width: "100%", maxWidth: "320px", justifyContent: "center", alignItems: "center", gap: "12px", padding: "14px", cursor: "pointer" }}>
+                    <Box size={20} />
+                    {selectedModel ? selectedModel.name : "2. Pilih File 3D (.glb) - Opsional"}
+                    <input type="file" accept=".glb,.gltf" onChange={handleModelChange} style={{ display: "none" }} />
+                  </label>
+                </div>
+
+                <button
+                  onClick={handleUploadAndGenerate}
+                  disabled={loading || !selectedImage}
                   className={loading ? "" : "btn-primary"}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "12px",
                     padding: "16px 36px",
-                    background: loading ? "rgba(255,255,255,0.05)" : undefined,
-                    color: loading ? "var(--text-tertiary)" : "white",
+                    background: loading || !selectedImage ? "rgba(255,255,255,0.05)" : undefined,
+                    color: loading || !selectedImage ? "var(--text-tertiary)" : "white",
                     fontWeight: 600,
                     borderRadius: "99px",
-                    cursor: loading ? "not-allowed" : "pointer",
-                    border: loading ? "1px solid rgba(255,255,255,0.1)" : "none",
+                    cursor: loading || !selectedImage ? "not-allowed" : "pointer",
+                    border: loading || !selectedImage ? "1px solid rgba(255,255,255,0.1)" : "none",
                   }}
                 >
                   {loading ? (
@@ -120,21 +177,14 @@ export default function CreateAR() {
                   ) : (
                     <>
                       <UploadCloud size={20} />
-                      Upload Gambar Target
+                      Generate AR
                     </>
                   )}
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={handleImageUpload}
-                    style={{ display: "none" }}
-                    disabled={loading}
-                  />
-                </label>
+                </button>
                 
                 {loading && (
                   <p style={{ marginTop: "24px", fontSize: "0.9rem", color: "var(--text-tertiary)" }}>
-                    Sistem sedang memproses gambar Anda melalui jaringan ImgBB agar dapat diakses secara global...
+                    Sistem sedang memproses file Anda ke Cloud agar dapat diakses dari mana saja...
                   </p>
                 )}
                 
@@ -150,9 +200,9 @@ export default function CreateAR() {
               </>
             ) : (
               <div className="fade-in">
-                <QRCodeDisplay url={arUrl} targetImage={targetImage || undefined} />
+                <QRCodeDisplay url={arUrl} targetImage={targetImagePreview || undefined} />
                 <button 
-                  onClick={() => { setArUrl(null); setTargetImage(null); }}
+                  onClick={() => { setArUrl(null); setSelectedImage(null); setSelectedModel(null); setTargetImagePreview(null); }}
                   className="btn-secondary"
                   style={{ marginTop: "30px", width: "100%" }}
                 >

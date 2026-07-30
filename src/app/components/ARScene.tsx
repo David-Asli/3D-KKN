@@ -8,9 +8,10 @@ interface ARSceneProps {
   mindSrc?: string; // URL to .mind file (for default)
   mindData?: ArrayBuffer; // Direct .mind data (from IndexedDB)
   targetImageSrc?: string; // Target image preview
+  modelUrl?: string; // Custom 3D model URL
 }
 
-export default function ARScene({ mindSrc, mindData, targetImageSrc }: ARSceneProps) {
+export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }: ARSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ARStatus>("loading");
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
@@ -100,7 +101,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc }: ARScenePr
 
     // Custom 3D Model
     const model = document.createElement("a-gltf-model");
-    model.setAttribute("src", "/Kursi.glb");
+    model.setAttribute("src", modelUrl || "/Kursi.glb");
     
     // Sesuaikan scale, position, dan rotasi sesuai kebutuhan
     // Nilai scale 0.5 bisa dibesarkan/dikecilkan tergantung ukuran asli Kursi.glb
@@ -147,7 +148,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc }: ARScenePr
     setTimeout(() => {
       setStatus((prev) => (prev === "loading" ? "scanning" : prev));
     }, 5000);
-  }, [scriptsLoaded, targetSource, mindData, mindBlobUrl]);
+  }, [scriptsLoaded, targetSource, mindData, mindBlobUrl, modelUrl]);
 
   useEffect(() => {
     initScene();
