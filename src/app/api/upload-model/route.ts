@@ -16,6 +16,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const blob = await put(filename, request.body, {
       access: 'public',
+      token: "vercel_blob_rw_YCiYxLolQO6iH02B_9nAT69U3IOLFrliaPprbtIZvutvJPp",
     });
 
     return NextResponse.json(blob);
