@@ -14,9 +14,15 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: 'Request body is empty' }, { status: 400 });
     }
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('BLOB_READ_WRITE_TOKEN is missing from environment variables');
+    } else {
+      console.log('BLOB_READ_WRITE_TOKEN is available, length:', process.env.BLOB_READ_WRITE_TOKEN.length);
+    }
+
     const blob = await put(filename, request.body, {
       access: 'public',
-      token: "vercel_blob_rw_YCiYxLolQO6iH02B_9nAT69U3IOLFrliaPprbtIZvutvJPp",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     return NextResponse.json(blob);
