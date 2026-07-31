@@ -112,7 +112,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     model.setAttribute("rotation", "0 0 0");
     
     // (Tambahan) mainkan animasi bawaan (skeletal/keyframe) dari file .glb jika ada
-    model.setAttribute("animation-mixer", "loop: repeat");
+    // timeScale: 0.75 digunakan sebagai trik visual memperlambat animasi 25% agar terlihat lebih halus saat FPS rendah
+    model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
     
     target.appendChild(model);
 
