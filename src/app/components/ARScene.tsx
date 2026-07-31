@@ -75,13 +75,14 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
 
     // Create A-Frame scene
     const scene = document.createElement("a-scene");
-    // Menambahkan filter untuk memperhalus pergerakan AR (mengurangi getaran/jitter)
+    // Menggunakan default filter MindAR, tapi kita fokus ke optimasi grafis (FPS)
     scene.setAttribute(
       "mindar-image",
-      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.01; filterBeta: 100; missTolerance: 5;`
+      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
-    scene.setAttribute("renderer", "colorManagement: true; physicallyCorrectLights: true;");
+    // Mematikan antialias dan menurunkan presisi render agar FPS naik drastis di HP
+    scene.setAttribute("renderer", "antialias: false; colorManagement: true; physicallyCorrectLights: true; precision: medium;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
