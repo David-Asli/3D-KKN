@@ -104,6 +104,7 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
           level="M"
           bgColor="#ffffff"
           fgColor="#050816"
+          includeMargin={true}
         />
       </div>
 

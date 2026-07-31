@@ -48,6 +48,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     const loadAllScripts = async () => {
       try {
         await loadScript("https://aframe.io/releases/1.5.0/aframe.min.js");
+        await loadScript("https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js");
         await loadScript(
           "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"
         );
@@ -111,6 +112,9 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     
     // (Opsional) animasi rotasi perlahan agar terlihat dinamis
     model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear;");
+    
+    // (Tambahan) mainkan animasi bawaan (skeletal/keyframe) dari file .glb jika ada
+    model.setAttribute("animation-mixer", "loop: repeat");
     
     target.appendChild(model);
 
