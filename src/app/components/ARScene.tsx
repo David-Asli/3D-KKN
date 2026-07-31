@@ -78,7 +78,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     // Menggunakan default filter MindAR, tapi kita fokus ke optimasi grafis (FPS)
     scene.setAttribute(
       "mindar-image",
-      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5;`
+      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
     // Mematikan antialias dan menurunkan presisi render agar FPS naik drastis di HP
