@@ -67,9 +67,16 @@ export default function CreateAR() {
             body: selectedModel,
           }
         );
-        const blob = await response.json();
         
-        if (!response.ok || !blob.url) {
+        if (!response.ok) {
+          if (response.status === 413) {
+            throw new Error("Gagal upload: Ukuran file 3D terlalu besar (Maksimal 4.5MB untuk server Vercel).");
+          }
+          throw new Error(`Gagal meng-upload file 3D (Status: ${response.status})`);
+        }
+        
+        const blob = await response.json();
+        if (!blob.url) {
           throw new Error(blob.error || "Gagal meng-upload file 3D ke Blob Storage.");
         }
         cloudModelUrl = blob.url;

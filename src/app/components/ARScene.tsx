@@ -78,7 +78,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     // Menambahkan filter untuk memperhalus pergerakan AR (mengurangi getaran/jitter)
     scene.setAttribute(
       "mindar-image",
-      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;`
+      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.01; filterBeta: 100; missTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
     scene.setAttribute("renderer", "colorManagement: true; physicallyCorrectLights: true;");
