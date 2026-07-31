@@ -75,9 +75,10 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
 
     // Create A-Frame scene
     const scene = document.createElement("a-scene");
+    // Menambahkan filter untuk memperhalus pergerakan AR (mengurangi getaran/jitter)
     scene.setAttribute(
       "mindar-image",
-      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`
+      `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001;`
     );
     scene.setAttribute("color-space", "sRGB");
     scene.setAttribute("renderer", "colorManagement: true; physicallyCorrectLights: true;");
@@ -105,13 +106,9 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     model.setAttribute("src", modelUrl || "/Kursi.glb");
     
     // Sesuaikan scale, position, dan rotasi sesuai kebutuhan
-    // Nilai scale 0.5 bisa dibesarkan/dikecilkan tergantung ukuran asli Kursi.glb
     model.setAttribute("scale", "0.5 0.5 0.5");
     model.setAttribute("position", "0 0 0");
     model.setAttribute("rotation", "0 0 0");
-    
-    // (Opsional) animasi rotasi perlahan agar terlihat dinamis
-    model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 15000; easing: linear;");
     
     // (Tambahan) mainkan animasi bawaan (skeletal/keyframe) dari file .glb jika ada
     model.setAttribute("animation-mixer", "loop: repeat");
