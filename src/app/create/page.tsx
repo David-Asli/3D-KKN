@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box, LogOut } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box, LogOut, Trash2, CheckCircle2 } from "lucide-react";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 import { supabase } from "@/lib/supabase";
 
 import { compileImageTarget, imageDataUrlToHTMLImage, resizeImage } from "../lib/compiler";
 
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
+
+interface ARTarget {
+  id: string;
+  image_url: string;
+  model_url: string | null;
+  mind_url: string | null;
+  created_at: string;
+}
 
 export default function CreateAR() {
   const [loading, setLoading] = useState(false);
@@ -22,7 +30,48 @@ export default function CreateAR() {
   const [targetImagePreview, setTargetImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [history, setHistory] = useState<ARTarget[]>([]);
+  const [fetchingHistory, setFetchingHistory] = useState(true);
+
   const router = useRouter();
+
+  const fetchHistory = async () => {
+    setFetchingHistory(true);
+    const { data, error } = await supabase
+      .from("ar_targets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    if (data) setHistory(data);
+    setFetchingHistory(false);
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const handleMakeActive = async (id: string) => {
+    const { error } = await supabase
+      .from("ar_targets")
+      .update({ created_at: new Date().toISOString() })
+      .eq("id", id);
+      
+    if (!error) {
+      fetchHistory();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Yakin ingin menghapus data ini?")) return;
+    const { error } = await supabase
+      .from("ar_targets")
+      .delete()
+      .eq("id", id);
+      
+    if (!error) {
+      fetchHistory();
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -143,7 +192,9 @@ export default function CreateAR() {
         throw new Error("Gagal menyimpan data ke database Supabase.");
       }
 
-      // 4. Generate AR URL (fallback jika diperlukan)
+      await fetchHistory();
+
+      // 5. Generate AR URL (fallback jika diperlukan)
       let generatedUrl = `${window.location.origin}/ar?img=${encodeURIComponent(cloudImageUrl)}`;
       if (cloudModelUrl) {
         generatedUrl += `&model=${encodeURIComponent(cloudModelUrl)}`;
@@ -282,6 +333,61 @@ export default function CreateAR() {
                 >
                   <UploadCloud size={18} /> Buat AR Baru
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* GALLERY SECTION */}
+          <div style={{ marginTop: "60px", marginBottom: "40px" }}>
+            <h2 className="gradient-text-primary" style={{ fontSize: "1.8rem", fontWeight: 700, marginBottom: "24px", textAlign: "center" }}>
+              Riwayat Upload
+            </h2>
+            
+            {fetchingHistory ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "40px" }}>
+                <Loader2 size={32} className="spin-animation" style={{ color: "var(--primary)" }} />
+              </div>
+            ) : history.length === 0 ? (
+              <p style={{ textAlign: "center", color: "var(--text-tertiary)" }}>Belum ada data AR yang di-upload.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                {history.map((item, index) => {
+                  const isActive = index === 0;
+                  
+                  return (
+                    <div key={item.id} className="glass-card fade-in" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px", position: "relative" }}>
+                      {isActive && (
+                        <div style={{ position: "absolute", top: "-12px", right: "-12px", background: "linear-gradient(135deg, #00d4ff, #6c63ff)", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", boxShadow: "0 4px 12px rgba(108, 99, 255, 0.4)", zIndex: 2 }}>
+                          <CheckCircle2 size={14} /> Sedang Aktif
+                        </div>
+                      )}
+                      
+                      <div style={{ position: "relative", width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", background: "rgba(0,0,0,0.2)" }}>
+                        <img src={item.image_url} alt="Target" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        {item.model_url && (
+                          <div style={{ position: "absolute", bottom: "8px", left: "8px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", color: "white", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <Box size={12} color="#00d4ff" /> 3D Model
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        Di-upload: {new Date(item.created_at).toLocaleString("id-ID")}
+                      </div>
+                      
+                      <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
+                        {!isActive && (
+                          <button onClick={() => handleMakeActive(item.id)} className="btn-primary" style={{ flex: 1, padding: "8px", fontSize: "0.85rem", borderRadius: "8px", display: "flex", justifyContent: "center", border: "none", color: "white", cursor: "pointer" }}>
+                            Gunakan Ini
+                          </button>
+                        )}
+                        <button onClick={() => handleDelete(item.id)} className="btn-secondary" style={{ padding: "8px", borderRadius: "8px", color: "#ff4444", flex: isActive ? 1 : "unset", display: "flex", justifyContent: "center", alignItems: "center", gap: "4px", border: "none", cursor: "pointer" }}>
+                          <Trash2 size={16} /> {isActive && "Hapus"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
