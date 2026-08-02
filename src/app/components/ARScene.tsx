@@ -84,7 +84,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     );
     scene.setAttribute("color-space", "sRGB");
     // Mengembalikan antialias: true dan precision: high agar model 3D terlihat tajam dan tidak blur (tidak bergerigi)
-    scene.setAttribute("renderer", "antialias: true; colorManagement: true; physicallyCorrectLights: true; precision: high;");
+    // Menghapus physicallyCorrectLights karena dapat membuat model 3D terlihat gelap gulita atau tidak berwarna
+    scene.setAttribute("renderer", "antialias: true; colorManagement: true; precision: high;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
