@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { compileImageTarget, imageDataUrlToHTMLImage, resizeImage } from "../lib/compiler";
 
+import { supabase } from "@/lib/supabase";
+
 const ARScene = dynamic(() => import("../components/ARScene"), {
   ssr: false,
   loading: () => <LoadingScreen />,
@@ -54,6 +56,7 @@ function ARPageContent() {
   const [progress, setProgress] = useState(0);
   const [compiledData, setCompiledData] = useState<ArrayBuffer | null>(null);
   const [compiledImageSrc, setCompiledImageSrc] = useState<string | null>(null);
+  const [finalModelUrl, setFinalModelUrl] = useState<string | null>(modelUrl);
   const [compilationError, setCompilationError] = useState<string | null>(null);
 
   // Generate or Load target dynamically
@@ -62,16 +65,42 @@ function ARPageContent() {
 
     const prepareTarget = async () => {
       try {
-        if (!imgUrl) {
-          // If no custom image provided, we just exit loading and let it fallback to default target
-          setLoading(false);
-          return;
+        let activeImgUrl = imgUrl;
+        let activeModelUrl = modelUrl;
+
+        if (!activeImgUrl) {
+          // Jika tidak ada URL khusus, ambil data terbaru dari Supabase
+          const { data, error } = await supabase
+            .from("ar_targets")
+            .select("image_url, model_url")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (error) {
+            console.error("Gagal mengambil data dari Supabase:", error);
+            // Fallback ke default demo target
+            setLoading(false);
+            return;
+          }
+          
+          if (data) {
+            activeImgUrl = data.image_url;
+            if (data.model_url) {
+              activeModelUrl = data.model_url;
+              setFinalModelUrl(activeModelUrl);
+            }
+          } else {
+            // No data in DB
+            setLoading(false);
+            return;
+          }
         }
 
-        setCompiledImageSrc(imgUrl);
+        setCompiledImageSrc(activeImgUrl);
 
         // Fetch through proxy to avoid strict mobile CORS tracking prevention
-        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imgUrl)}`;
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(activeImgUrl)}`;
         const img = await imageDataUrlToHTMLImage(proxyUrl);
         if (isCancelled) return;
 
@@ -99,7 +128,7 @@ function ARPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, [imgUrl]);
+  }, [imgUrl, modelUrl]);
 
   // Show error if compilation fails
   if (compilationError) {
@@ -216,13 +245,13 @@ function ARPageContent() {
       <ARScene
         mindData={compiledData}
         targetImageSrc={compiledImageSrc || undefined}
-        modelUrl={modelUrl || undefined}
+        modelUrl={finalModelUrl || undefined}
       />
     );
   }
 
   // Fallback to default demo target
-  return <ARScene mindSrc="/targets.mind" />;
+  return <ARScene mindSrc="/targets.mind" modelUrl={finalModelUrl || undefined} />;
 }
 
 export default function ARPage() {

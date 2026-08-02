@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box, LogOut } from "lucide-react";
 import QRCodeDisplay from "../components/QRCodeDisplay";
+import { supabase } from "@/lib/supabase";
 
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
 
@@ -95,7 +96,22 @@ export default function CreateAR() {
         cloudModelUrl = blob.url;
       }
 
-      // 3. Generate AR URL
+      // 3. Simpan ke Database Supabase
+      const { error: dbError } = await supabase
+        .from("ar_targets")
+        .insert([
+          {
+            image_url: cloudImageUrl,
+            model_url: cloudModelUrl || null,
+          }
+        ]);
+
+      if (dbError) {
+        console.error("Supabase error:", dbError);
+        throw new Error("Gagal menyimpan data ke database Supabase.");
+      }
+
+      // 4. Generate AR URL (fallback jika diperlukan)
       let generatedUrl = `${window.location.origin}/ar?img=${encodeURIComponent(cloudImageUrl)}`;
       if (cloudModelUrl) {
         generatedUrl += `&model=${encodeURIComponent(cloudModelUrl)}`;
