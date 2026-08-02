@@ -140,17 +140,18 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
 
     target.appendChild(model);
 
-    // Lights
-    const ambientLight = document.createElement("a-light");
-    ambientLight.setAttribute("type", "ambient");
-    ambientLight.setAttribute("color", "#ffffff");
-    ambientLight.setAttribute("intensity", "0.6");
-    scene.appendChild(ambientLight);
+    // Lights - Ditingkatkan agar model 3D (terutama yang mengkilap/metalik) tidak terlihat hitam
+    const hemiLight = document.createElement("a-light");
+    hemiLight.setAttribute("type", "hemisphere");
+    hemiLight.setAttribute("color", "#ffffff"); // Cahaya dari langit (putih)
+    hemiLight.setAttribute("groundColor", "#444444"); // Pantulan dari tanah (abu-abu)
+    hemiLight.setAttribute("intensity", "1.5");
+    scene.appendChild(hemiLight);
 
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
-    dirLight.setAttribute("intensity", "0.8");
+    dirLight.setAttribute("intensity", "1.0");
     dirLight.setAttribute("position", "1 2 1");
     scene.appendChild(dirLight);
 
