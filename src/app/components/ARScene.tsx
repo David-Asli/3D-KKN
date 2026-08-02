@@ -52,6 +52,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
         await loadScript(
           "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"
         );
+        // Script untuk mendeteksi sentuhan/geser (gestures)
+        await loadScript("https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js");
         setScriptsLoaded(true);
       } catch (error) {
         console.error("Error loading AR scripts:", error);
@@ -86,6 +88,9 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
+    // Menambahkan gesture-detector ke scene agar bisa mendeteksi sentuhan
+    scene.setAttribute("gesture-detector", "");
+    
     scene.style.position = "absolute";
     scene.style.top = "0";
     scene.style.left = "0";
@@ -96,6 +101,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     const camera = document.createElement("a-camera");
     camera.setAttribute("position", "0 0 0");
     camera.setAttribute("look-controls", "enabled: false");
+    // Agar gesture berfungsi, kita perlu menambahkan raycaster ke kamera jika menggunakan klik, 
+    // namun gesture-detector arjs-gestures mendengarkan event langsung di scene.
     scene.appendChild(camera);
 
     // Target entity
@@ -112,9 +119,24 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     model.setAttribute("rotation", "0 0 0");
     
     // (Tambahan) mainkan animasi bawaan (skeletal/keyframe) dari file .glb jika ada
-    // timeScale: 0.75 digunakan sebagai trik visual memperlambat animasi 25% agar terlihat lebih halus saat FPS rendah
     model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
     
+    // -------------------------------------------------------------
+    // FITUR INTERAKSI SENTUH (GESER & ZOOM)
+    // -------------------------------------------------------------
+    // Menambahkan class agar bisa dideteksi oleh handler
+    model.setAttribute("class", "clickable");
+    // Menambahkan gesture-handler untuk memutar (1 jari) dan zoom/scale (2 jari)
+    model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
+
+    // -------------------------------------------------------------
+    // FITUR GERAK/PUTAR SENDIRI (AUTO-ROTATE)
+    // -------------------------------------------------------------
+    // Jika Anda ingin model berputar sendiri (otomatis), Anda bisa membuka komentar di bawah ini:
+    // HAPUS atau comment 'gesture-handler' di atas jika Anda mengaktifkan animasi otomatis 
+    // agar sentuhan pengguna tidak bertabrakan dengan animasi putar.
+    // model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear;");
+
     target.appendChild(model);
 
     // Lights

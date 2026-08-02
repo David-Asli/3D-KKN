@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box, LogOut } from "lucide-react";
 import QRCodeDisplay from "../components/QRCodeDisplay";
 
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
@@ -16,6 +17,18 @@ export default function CreateAR() {
   
   const [targetImagePreview, setTargetImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to logout", err);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,11 +119,17 @@ export default function CreateAR() {
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", padding: "40px 24px" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "40px" }}>
-            <Link href="/" className="btn-icon" style={{ textDecoration: "none" }}>
-              <ArrowLeft size={20} />
-            </Link>
-            <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>Kembali ke Beranda</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "40px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <Link href="/" className="btn-icon" style={{ textDecoration: "none" }}>
+                <ArrowLeft size={20} />
+              </Link>
+              <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>Kembali ke Beranda</span>
+            </div>
+            
+            <button onClick={handleLogout} className="btn-secondary" style={{ padding: "8px 16px", gap: "8px", fontSize: "0.9rem" }}>
+              <LogOut size={16} /> Logout Admin
+            </button>
           </div>
 
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
