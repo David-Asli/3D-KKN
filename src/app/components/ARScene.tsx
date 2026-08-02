@@ -83,8 +83,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
       `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
-    // Mematikan antialias dan menurunkan presisi render agar FPS naik drastis di HP
-    scene.setAttribute("renderer", "antialias: false; colorManagement: true; physicallyCorrectLights: true; precision: medium;");
+    // Mengembalikan antialias: true dan precision: high agar model 3D terlihat tajam dan tidak blur (tidak bergerigi)
+    scene.setAttribute("renderer", "antialias: true; colorManagement: true; physicallyCorrectLights: true; precision: high;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
