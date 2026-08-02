@@ -190,7 +190,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
           position: "fixed",
           inset: 0,
           zIndex: 100,
-          background: "#000",
+          background: "transparent",
         }}
       />
 
