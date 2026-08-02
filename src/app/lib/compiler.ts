@@ -87,6 +87,23 @@ export async function compileImageTarget(
   return buffer;
 }
 
+export async function compileMultipleImageTargets(
+  images: HTMLImageElement[],
+  onProgress: (progress: number) => void
+): Promise<ArrayBuffer> {
+  await loadCompiler();
+
+  const Compiler = window.MINDAR?.IMAGE?.Compiler;
+  if (!Compiler) {
+    throw new Error("MindAR Compiler not available");
+  }
+
+  const compiler = new Compiler();
+  await compiler.compileImageTargets(images, onProgress);
+  const buffer = await compiler.exportData();
+  return buffer;
+}
+
 export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

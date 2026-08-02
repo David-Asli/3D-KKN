@@ -8,10 +8,10 @@ interface ARSceneProps {
   mindSrc?: string; // URL to .mind file (for default)
   mindData?: ArrayBuffer; // Direct .mind data (from IndexedDB)
   targetImageSrc?: string; // Target image preview
-  modelUrl?: string; // Custom 3D model URL
+  models?: string[]; // Array of Custom 3D model URLs
 }
 
-export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }: ARSceneProps) {
+export default function ARScene({ mindSrc, mindData, targetImageSrc, models = [] }: ARSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ARStatus>("loading");
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
@@ -103,23 +103,37 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     camera.setAttribute("look-controls", "enabled: false");
     scene.appendChild(camera);
 
-    // Target entity
-    const target = document.createElement("a-entity");
-    target.setAttribute("mindar-image-target", "targetIndex: 0");
+    // Multi-Target Setup
+    // Fallback if models array is empty (for demo/default)
+    const activeModels = models.length > 0 ? models : ["/Kursi.glb"];
 
-    // Custom 3D Model
-    const model = document.createElement("a-gltf-model");
-    model.setAttribute("src", modelUrl || "/Kursi.glb");
-    
-    model.setAttribute("scale", "0.5 0.5 0.5");
-    model.setAttribute("position", "0 0 0");
-    model.setAttribute("rotation", "0 0 0");
-    model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
-    
-    model.setAttribute("class", "clickable");
-    model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
+    activeModels.forEach((modelUrl, index) => {
+      const target = document.createElement("a-entity");
+      target.setAttribute("mindar-image-target", `targetIndex: ${index}`);
 
-    target.appendChild(model);
+      const model = document.createElement("a-gltf-model");
+      model.setAttribute("src", modelUrl);
+      
+      model.setAttribute("scale", "0.5 0.5 0.5");
+      model.setAttribute("position", "0 0 0");
+      model.setAttribute("rotation", "0 0 0");
+      model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
+      
+      model.setAttribute("class", "clickable");
+      model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
+
+      target.appendChild(model);
+
+      target.addEventListener("targetFound", () => {
+        setStatus("found");
+      });
+
+      target.addEventListener("targetLost", () => {
+        setStatus("scanning");
+      });
+
+      scene.appendChild(target);
+    });
 
     // Lights - Dikembalikan ke versi paling stabil (Ambient + Directional biasa)
     const ambientLight = document.createElement("a-light");
@@ -135,18 +149,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 
-    scene.appendChild(target);
-
     // Event listeners
     scene.addEventListener("arReady", () => {
-      setStatus("scanning");
-    });
-
-    target.addEventListener("targetFound", () => {
-      setStatus("found");
-    });
-
-    target.addEventListener("targetLost", () => {
       setStatus("scanning");
     });
 
@@ -155,7 +159,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     setTimeout(() => {
       setStatus((prev) => (prev === "loading" ? "scanning" : prev));
     }, 5000);
-  }, [scriptsLoaded, targetSource, mindData, mindBlobUrl, modelUrl]);
+  }, [scriptsLoaded, targetSource, mindData, mindBlobUrl, models]);
 
   useEffect(() => {
     initScene();

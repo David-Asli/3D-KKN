@@ -110,32 +110,10 @@ export default function CreateAR() {
     try {
       let cloudImageUrl = "";
       let cloudModelUrl = "";
-      let cloudMindUrl = "";
-
-      // 1. Convert Image to HTMLImageElement and Compile to .mind file
-      const imageUrl = URL.createObjectURL(selectedImage);
-      const img = await imageDataUrlToHTMLImage(imageUrl);
-      const resizedImg = await resizeImage(img, 800);
-      
-      const mindBuffer = await compileImageTarget(resizedImg, (progress) => {
-        setLoadingText(`Membangun Target AR... ${Math.round(progress * 100)}%`);
-      });
-
-      setLoadingText("Mengunggah File Target ke Cloud...");
-
-      // Upload .mind file to Vercel Blob
-      const mindFile = new File([mindBuffer], `target-${Date.now()}.mind`, { type: "application/octet-stream" });
-      const mindRes = await fetch(`/api/upload-model?filename=${encodeURIComponent(mindFile.name)}`, {
-        method: 'POST',
-        body: mindFile,
-      });
-      const mindBlob = await mindRes.json();
-      if (!mindBlob.url) throw new Error("Gagal meng-upload file pelacak (.mind).");
-      cloudMindUrl = mindBlob.url;
 
       setLoadingText("Mengunggah Poster ke Cloud...");
 
-      // 2. Upload to ImgBB
+      // 1. Upload to ImgBB
       const formData = new FormData();
       formData.append("image", selectedImage);
       const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
@@ -176,14 +154,13 @@ export default function CreateAR() {
 
       setLoadingText("Menyimpan ke Database...");
 
-      // 4. Simpan ke Database Supabase
+      // 3. Simpan ke Database Supabase
       const { error: dbError } = await supabase
         .from("ar_targets")
         .insert([
           {
             image_url: cloudImageUrl,
             model_url: cloudModelUrl || null,
-            mind_url: cloudMindUrl
           }
         ]);
 
