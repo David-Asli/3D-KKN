@@ -7,10 +7,13 @@ import { ArrowLeft, Image as ImageIcon, UploadCloud, Loader2, Box, LogOut } from
 import QRCodeDisplay from "../components/QRCodeDisplay";
 import { supabase } from "@/lib/supabase";
 
+import { compileImageTarget, imageDataUrlToHTMLImage, resizeImage } from "../lib/compiler";
+
 const IMGBB_API_KEY = "4e6c1e8e810c3cea1e4d2003401261ee";
 
 export default function CreateAR() {
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Mengunggah ke Cloud...");
   const [arUrl, setArUrl] = useState<string | null>(null);
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -51,14 +54,39 @@ export default function CreateAR() {
     }
 
     setLoading(true);
+    setLoadingText("Menganalisis dan Membangun Target AR (Sekitar 10 Detik)...");
     setError(null);
     setArUrl(null);
 
     try {
       let cloudImageUrl = "";
       let cloudModelUrl = "";
+      let cloudMindUrl = "";
 
-      // 1. Upload to ImgBB
+      // 1. Convert Image to HTMLImageElement and Compile to .mind file
+      const imageUrl = URL.createObjectURL(selectedImage);
+      const img = await imageDataUrlToHTMLImage(imageUrl);
+      const resizedImg = await resizeImage(img, 800);
+      
+      const mindBuffer = await compileImageTarget(resizedImg, (progress) => {
+        setLoadingText(`Membangun Target AR... ${Math.round(progress * 100)}%`);
+      });
+
+      setLoadingText("Mengunggah File Target ke Cloud...");
+
+      // Upload .mind file to Vercel Blob
+      const mindFile = new File([mindBuffer], `target-${Date.now()}.mind`, { type: "application/octet-stream" });
+      const mindRes = await fetch(`/api/upload-model?filename=${encodeURIComponent(mindFile.name)}`, {
+        method: 'POST',
+        body: mindFile,
+      });
+      const mindBlob = await mindRes.json();
+      if (!mindBlob.url) throw new Error("Gagal meng-upload file pelacak (.mind).");
+      cloudMindUrl = mindBlob.url;
+
+      setLoadingText("Mengunggah Poster ke Cloud...");
+
+      // 2. Upload to ImgBB
       const formData = new FormData();
       formData.append("image", selectedImage);
       const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
@@ -72,8 +100,9 @@ export default function CreateAR() {
       }
       cloudImageUrl = imgData.data.url;
 
-      // 2. Upload to Vercel Blob (if 3D model is provided)
+      // 3. Upload to Vercel Blob (if 3D model is provided)
       if (selectedModel) {
+        setLoadingText("Mengunggah 3D Model ke Cloud...");
         const response = await fetch(
           `/api/upload-model?filename=${encodeURIComponent(selectedModel.name)}`,
           {
@@ -96,13 +125,16 @@ export default function CreateAR() {
         cloudModelUrl = blob.url;
       }
 
-      // 3. Simpan ke Database Supabase
+      setLoadingText("Menyimpan ke Database...");
+
+      // 4. Simpan ke Database Supabase
       const { error: dbError } = await supabase
         .from("ar_targets")
         .insert([
           {
             image_url: cloudImageUrl,
             model_url: cloudModelUrl || null,
+            mind_url: cloudMindUrl
           }
         ]);
 
@@ -214,7 +246,7 @@ export default function CreateAR() {
                   {loading ? (
                     <>
                       <Loader2 size={20} className="spin-animation" /> 
-                      Mengunggah ke Cloud...
+                      {loadingText}
                     </>
                   ) : (
                     <>
@@ -226,7 +258,7 @@ export default function CreateAR() {
                 
                 {loading && (
                   <p style={{ marginTop: "24px", fontSize: "0.9rem", color: "var(--text-tertiary)" }}>
-                    Sistem sedang memproses file Anda ke Cloud agar dapat diakses dari mana saja...
+                    Sistem sedang memproses file Anda ke Cloud agar dapat diakses dari mana saja secara instan...
                   </p>
                 )}
                 
