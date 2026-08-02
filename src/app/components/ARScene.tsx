@@ -199,13 +199,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
         ← Kembali
       </a>
 
-      {/* Target Preview */}
-      {(targetImageSrc || !mindData) && (
-        <div className="target-preview">
-          <img src={targetImageSrc || "/target.png"} alt="Target" />
-          <div className="label">TARGET</div>
-        </div>
-      )}
+      {/* Target Preview dihapus sesuai permintaan agar tampilan layar bersih */}
 
       {/* Status Bar */}
       <div className={`ar-status ${status === "found" ? "found" : ""}`}>
