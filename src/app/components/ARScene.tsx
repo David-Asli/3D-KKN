@@ -83,9 +83,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
       `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
-    // Mengembalikan antialias: true dan precision: high agar model 3D terlihat tajam dan tidak blur (tidak bergerigi)
-    // Menghapus physicallyCorrectLights karena dapat membuat model 3D terlihat gelap gulita atau tidak berwarna
-    scene.setAttribute("renderer", "antialias: true; colorManagement: true; precision: high;");
+    // Mengembalikan pengaturan renderer ke bawaan A-Frame yang paling stabil
+    // scene.setAttribute("renderer", "colorManagement: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
@@ -102,8 +101,6 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     const camera = document.createElement("a-camera");
     camera.setAttribute("position", "0 0 0");
     camera.setAttribute("look-controls", "enabled: false");
-    // Agar gesture berfungsi, kita perlu menambahkan raycaster ke kamera jika menggunakan klik, 
-    // namun gesture-detector arjs-gestures mendengarkan event langsung di scene.
     scene.appendChild(camera);
 
     // Target entity
@@ -114,45 +111,28 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, modelUrl }:
     const model = document.createElement("a-gltf-model");
     model.setAttribute("src", modelUrl || "/Kursi.glb");
     
-    // Sesuaikan scale, position, dan rotasi sesuai kebutuhan
     model.setAttribute("scale", "0.5 0.5 0.5");
     model.setAttribute("position", "0 0 0");
     model.setAttribute("rotation", "0 0 0");
-    
-    // (Tambahan) mainkan animasi bawaan (skeletal/keyframe) dari file .glb jika ada
     model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
     
-    // -------------------------------------------------------------
-    // FITUR INTERAKSI SENTUH (GESER & ZOOM)
-    // -------------------------------------------------------------
-    // Menambahkan class agar bisa dideteksi oleh handler
     model.setAttribute("class", "clickable");
-    // Menambahkan gesture-handler untuk memutar (1 jari) dan zoom/scale (2 jari)
     model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
-
-    // -------------------------------------------------------------
-    // FITUR GERAK/PUTAR SENDIRI (AUTO-ROTATE)
-    // -------------------------------------------------------------
-    // Jika Anda ingin model berputar sendiri (otomatis), Anda bisa membuka komentar di bawah ini:
-    // HAPUS atau comment 'gesture-handler' di atas jika Anda mengaktifkan animasi otomatis 
-    // agar sentuhan pengguna tidak bertabrakan dengan animasi putar.
-    // model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear;");
 
     target.appendChild(model);
 
-    // Lights - Ditingkatkan agar model 3D (terutama yang mengkilap/metalik) tidak terlihat hitam
-    const hemiLight = document.createElement("a-light");
-    hemiLight.setAttribute("type", "hemisphere");
-    hemiLight.setAttribute("color", "#ffffff"); // Cahaya dari langit (putih)
-    hemiLight.setAttribute("groundColor", "#444444"); // Pantulan dari tanah (abu-abu)
-    hemiLight.setAttribute("intensity", "1.5");
-    scene.appendChild(hemiLight);
+    // Lights - Dikembalikan ke versi paling stabil (Ambient + Directional biasa)
+    const ambientLight = document.createElement("a-light");
+    ambientLight.setAttribute("type", "ambient");
+    ambientLight.setAttribute("color", "#ffffff");
+    ambientLight.setAttribute("intensity", "1.0"); // Dibuat 1.0 agar cukup terang
+    scene.appendChild(ambientLight);
 
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
     dirLight.setAttribute("intensity", "1.0");
-    dirLight.setAttribute("position", "1 2 1");
+    dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 
     scene.appendChild(target);
