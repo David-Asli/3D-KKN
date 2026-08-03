@@ -29,6 +29,7 @@ export default function CreateAR() {
   
   const [targetImagePreview, setTargetImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const [history, setHistory] = useState<ARTarget[]>([]);
   const [fetchingHistory, setFetchingHistory] = useState(true);
@@ -65,6 +66,7 @@ export default function CreateAR() {
   };
 
   const handleDelete = async (id: string) => {
+    setItemToDelete(null); // Tutup pop-up
     const { error } = await supabase
       .from("ar_targets")
       .delete()
@@ -363,7 +365,7 @@ export default function CreateAR() {
                             Gunakan Ini
                           </button>
                         )}
-                        <button onClick={() => handleDelete(item.id)} className="btn-secondary" style={{ padding: "8px", borderRadius: "8px", color: "#ff4444", flex: isActive ? 1 : "unset", display: "flex", justifyContent: "center", alignItems: "center", gap: "4px", border: "none", cursor: "pointer" }}>
+                        <button onClick={() => setItemToDelete(item.id)} className="btn-secondary" style={{ padding: "8px", borderRadius: "8px", color: "#ff4444", flex: isActive ? 1 : "unset", display: "flex", justifyContent: "center", alignItems: "center", gap: "4px", border: "none", cursor: "pointer" }}>
                           <Trash2 size={16} /> {isActive && "Hapus"}
                         </button>
                       </div>
@@ -376,6 +378,31 @@ export default function CreateAR() {
 
         </div>
       </div>
+
+      {/* CUSTOM DELETE CONFIRMATION MODAL */}
+      {itemToDelete && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease-out' }}>
+          <div className="glass-card fade-in" style={{ padding: '32px', textAlign: 'center', maxWidth: '400px', width: '90%', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', color: '#ff4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <Trash2 size={32} />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '12px' }}>Hapus Target AR?</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              Data yang sudah dihapus tidak dapat dikembalikan. Pengunjung tidak akan bisa lagi memindai gambar ini.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setItemToDelete(null)} className="btn-secondary" style={{ flex: 1, padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Batal</button>
+              <button onClick={() => handleDelete(itemToDelete)} className="btn-primary" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: '#ff4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Ya, Hapus</button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: scale(0.95); }
+              to { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
     </>
   );
 }
