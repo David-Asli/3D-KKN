@@ -83,8 +83,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
-    // Mengembalikan pengaturan renderer ke bawaan A-Frame yang paling stabil
-    // scene.setAttribute("renderer", "colorManagement: true;");
+    // Mengaktifkan colorManagement agar warna model (terutama warna cerah seperti kuning) tidak pudar/gelap
+    scene.setAttribute("renderer", "colorManagement: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
@@ -121,6 +121,24 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       
       model.setAttribute("class", "clickable");
       model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
+
+      // Perbaikan warna Hitam: Model dengan sifat 'Metallic' butuh pantulan (HDRI)
+      // Karena kita AR Kamera (tidak ada HDRI), kita paksa matikan sifat metallic-nya
+      model.addEventListener('model-loaded', () => {
+        const obj3D = model.getObject3D('mesh');
+        if (obj3D) {
+          obj3D.traverse((node: any) => {
+            if (node.isMesh && node.material) {
+              // Jika material terlalu metalik, turunkan agar tidak jadi hitam legam
+              if (node.material.metalness !== undefined && node.material.metalness > 0.1) {
+                node.material.metalness = 0.0;
+                node.material.roughness = 0.8;
+                node.material.needsUpdate = true;
+              }
+            }
+          });
+        }
+      });
 
       target.appendChild(model);
 
