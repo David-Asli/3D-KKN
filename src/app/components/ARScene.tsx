@@ -83,8 +83,9 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       `imageTargetSrc: ${targetSource}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; missTolerance: 5; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5;`
     );
     scene.setAttribute("color-space", "sRGB");
-    // Mengaktifkan colorManagement agar warna model (terutama warna cerah seperti kuning) tidak pudar/gelap
-    scene.setAttribute("renderer", "colorManagement: true;");
+    // Mengaktifkan colorManagement agar warna model tidak pudar, dan
+    // Menggunakan settingan mediump & antialias false untuk mendongkrak FPS (mencegah patah-patah) di HP.
+    scene.setAttribute("renderer", "colorManagement: true; antialias: false; precision: mediump; logarithmicDepthBuffer: false; alpha: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");

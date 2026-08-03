@@ -58,11 +58,13 @@ export default function CreateAR() {
       
     if (!error) {
       fetchHistory();
+    } else {
+      alert("Gagal mengaktifkan: " + error.message);
+      console.error(error);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Yakin ingin menghapus data ini?")) return;
     const { error } = await supabase
       .from("ar_targets")
       .delete()
@@ -70,6 +72,9 @@ export default function CreateAR() {
       
     if (!error) {
       fetchHistory();
+    } else {
+      alert("Gagal menghapus: " + error.message);
+      console.error(error);
     }
   };
 
