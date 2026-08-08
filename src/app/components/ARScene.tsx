@@ -98,10 +98,12 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     scene.style.width = "100%";
     scene.style.height = "100%";
 
-    // Camera
+    // Camera (dengan fitur raycaster agar bisa disentuh/diputar)
     const camera = document.createElement("a-camera");
     camera.setAttribute("position", "0 0 0");
     camera.setAttribute("look-controls", "enabled: false");
+    camera.setAttribute("cursor", "fuse: false; rayOrigin: mouse;");
+    camera.setAttribute("raycaster", "objects: .clickable");
     scene.appendChild(camera);
 
     // Multi-Target Setup
@@ -126,7 +128,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       // Perbaikan warna Hitam: Model dengan sifat 'Metallic' butuh pantulan (HDRI)
       // Karena kita AR Kamera (tidak ada HDRI), kita paksa matikan sifat metallic-nya
       model.addEventListener('model-loaded', () => {
-        const obj3D = model.getObject3D('mesh');
+        const obj3D = (model as any).getObject3D('mesh');
         if (obj3D) {
           obj3D.traverse((node: any) => {
             if (node.isMesh && node.material) {
