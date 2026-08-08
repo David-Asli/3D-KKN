@@ -12,6 +12,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Mengizinkan file 3D tanpa autentikasi yang rumit (karena admin sudah login)
         return {
           allowedContentTypes: ['model/gltf-binary', 'model/gltf+json', 'application/octet-stream', 'application/json'],
+          maximumSizeInBytes: 500 * 1024 * 1024, // 500MB
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
