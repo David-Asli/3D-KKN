@@ -137,26 +137,18 @@ export default function CreateAR() {
       // 3. Upload to Vercel Blob (if 3D model is provided)
       if (selectedModel) {
         setLoadingText("Mengunggah 3D Model ke Cloud...");
-        const response = await fetch(
-          `/api/upload-model?filename=${encodeURIComponent(selectedModel.name)}`,
-          {
-            method: 'POST',
-            body: selectedModel,
-          }
-        );
         
-        if (!response.ok) {
-          if (response.status === 413) {
-            throw new Error("Gagal upload: Ukuran file 3D terlalu besar (Maksimal 4.5MB untuk server Vercel).");
-          }
-          throw new Error(`Gagal meng-upload file 3D (Status: ${response.status})`);
+        try {
+          const { upload } = await import('@vercel/blob/client');
+          const blob = await upload(selectedModel.name, selectedModel, {
+            access: 'public',
+            handleUploadUrl: '/api/upload-model',
+          });
+          cloudModelUrl = blob.url;
+        } catch (uploadError: any) {
+          console.error("Blob upload error:", uploadError);
+          throw new Error("Gagal meng-upload file 3D: " + (uploadError.message || "Unknown error"));
         }
-        
-        const blob = await response.json();
-        if (!blob.url) {
-          throw new Error(blob.error || "Gagal meng-upload file 3D ke Blob Storage.");
-        }
-        cloudModelUrl = blob.url;
       }
 
       setLoadingText("Menyimpan ke Database...");
