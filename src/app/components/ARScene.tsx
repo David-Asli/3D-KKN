@@ -85,7 +85,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     scene.setAttribute("color-space", "sRGB");
     // Mengaktifkan colorManagement agar warna model tidak pudar, dan
     // Menggunakan settingan mediump & antialias false untuk mendongkrak FPS (mencegah patah-patah) di HP.
-    scene.setAttribute("renderer", "colorManagement: true; antialias: false; precision: mediump; logarithmicDepthBuffer: false; alpha: true;");
+    scene.setAttribute("renderer", "colorManagement: true; antialias: true; physicallyCorrectLights: true; logarithmicDepthBuffer: false; alpha: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
@@ -146,17 +146,20 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       scene.appendChild(target);
     });
 
-    // Lights - Disesuaikan agar tidak terlalu menyilaukan/membuat model menjadi putih
+    // Tambahkan decoder draco & meshopt jika file .glb dikompresi dari Blender
+    scene.setAttribute("gltf-model", "dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/; meshoptDecoderPath: https://unpkg.com/meshoptimizer/meshopt_decoder.js;");
+
+    // Lights - Intensitas dinaikkan karena physicallyCorrectLights diaktifkan
     const ambientLight = document.createElement("a-light");
     ambientLight.setAttribute("type", "ambient");
     ambientLight.setAttribute("color", "#ffffff");
-    ambientLight.setAttribute("intensity", "0.6"); 
+    ambientLight.setAttribute("intensity", "2.5"); 
     scene.appendChild(ambientLight);
 
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
-    dirLight.setAttribute("intensity", "0.8");
+    dirLight.setAttribute("intensity", "3.5");
     dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 

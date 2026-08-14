@@ -249,7 +249,7 @@ export default function CreateAR() {
                   <label className="btn-secondary" style={{ display: "flex", width: "100%", maxWidth: "320px", justifyContent: "center", alignItems: "center", gap: "12px", padding: "14px", cursor: "pointer" }}>
                     <Box size={20} />
                     {selectedModel ? selectedModel.name : "2. Pilih File 3D (.glb) - Opsional"}
-                    <input type="file" accept=".glb,.gltf" onChange={handleModelChange} style={{ display: "none" }} />
+                    <input type="file" accept=".glb" onChange={handleModelChange} style={{ display: "none" }} />
                   </label>
                 </div>
 
