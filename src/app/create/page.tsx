@@ -220,7 +220,7 @@ export default function CreateAR() {
             {!arUrl ? (
               <>
                 <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginBottom: "24px" }}>
-                  <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--secondary)" }}>
+                  <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#8b5cf6" }}>
                     <ImageIcon size={40} />
                   </div>
                   <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(0, 212, 255, 0.1)", border: "1px solid rgba(0, 212, 255, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#00d4ff" }}>
@@ -332,14 +332,13 @@ export default function CreateAR() {
                   
                   return (
                     <div key={item.id} className="glass-card fade-in" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px", position: "relative" }}>
-                      {isActive && (
-                        <div style={{ position: "absolute", top: "-12px", right: "-12px", background: "linear-gradient(135deg, #00d4ff, #6c63ff)", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", boxShadow: "0 4px 12px rgba(108, 99, 255, 0.4)", zIndex: 2 }}>
-                          <CheckCircle2 size={14} /> Sedang Aktif
-                        </div>
-                      )}
-                      
                       <div style={{ position: "relative", width: "100%", height: "200px", borderRadius: "12px", overflow: "hidden", background: "rgba(0,0,0,0.2)" }}>
-                        <img src={item.image_url} alt="Target" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={`/api/proxy-image?url=${encodeURIComponent(item.image_url)}`} alt="Target" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        {isActive && (
+                          <div style={{ position: "absolute", top: "8px", right: "8px", background: "linear-gradient(135deg, #00d4ff, #6c63ff)", color: "white", padding: "4px 12px", borderRadius: "99px", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px", boxShadow: "0 4px 12px rgba(108, 99, 255, 0.4)", zIndex: 2 }}>
+                            <CheckCircle2 size={14} /> Sedang Aktif
+                          </div>
+                        )}
                         {item.model_url && (
                           <div style={{ position: "absolute", bottom: "8px", left: "8px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", color: "white", display: "flex", alignItems: "center", gap: "4px" }}>
                             <Box size={12} color="#00d4ff" /> 3D Model

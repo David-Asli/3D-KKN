@@ -5,8 +5,8 @@ import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 import QRCodeDisplay from "./components/QRCodeDisplay";
 import { 
-  ScanLine, Smartphone, Cuboid, Zap, 
-  Layers, Globe2, Cpu, Box, Cloud, MonitorSmartphone,
+  ScanLine, Cuboid, Zap, 
+  Layers, Globe2, Box, Cloud, MonitorSmartphone,
   Mail, ArrowRight, Camera, Code, User
 } from "lucide-react";
 
@@ -19,8 +19,8 @@ export default function Home() {
   }, []);
 
   const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
   };
 
   const staggerContainer: Variants = {
@@ -32,227 +32,213 @@ export default function Home() {
   };
 
   return (
-    <>
-      {/* Background Effects */}
-      <div className="bg-gradient-animated" />
-      <div className="grid-overlay" />
-      <div className="noise-overlay" />
+    <div style={{ position: "relative", zIndex: 10 }}>
+      {/* ===== NAVBAR ===== */}
+      <nav
+        style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0,
+          zIndex: 50,
+          padding: "16px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "var(--background)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        <div className="container-custom" style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "1.1rem" }}>
+            <Cuboid color="var(--primary)" size={24} />
+            <span style={{ color: "var(--text-primary)" }}>AR SIAMPEL</span>
+          </div>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <Link href="/create" className="btn-primary" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
+              Buat AR
+            </Link>
+          </div>
+        </div>
+      </nav>
 
-      {/* Floating Orbs */}
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
+      <main>
+        {/* ===== HERO SECTION ===== */}
+        <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", paddingTop: "100px", paddingBottom: "60px" }}>
+          <div className="container-custom">
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
+              gap: "40px", 
+              alignItems: "center" 
+            }}>
+              
+              {/* Hero Content - Kolom Kiri */}
+              <motion.div initial="hidden" animate="visible" variants={staggerContainer} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <motion.div variants={fadeInUp}>
+                  <span style={{ 
+                    display: "inline-block", 
+                    padding: "6px 12px", 
+                    background: "rgba(59, 130, 246, 0.1)", 
+                    color: "var(--primary)", 
+                    borderRadius: "100px", 
+                    fontSize: "0.85rem", 
+                    fontWeight: 600,
+                    marginBottom: "8px"
+                  }}>
+                    <span style={{ color: "var(--primary)", fontWeight: 600 }}>WebAR • Tanpa Instalasi</span>
+                  </span>
+                </motion.div>
 
-      <div style={{ position: "relative", zIndex: 10 }}>
-        {/* ===== NAVBAR ===== */}
-        <nav
-          style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0,
-            zIndex: 50,
-            padding: "20px 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            background: "rgba(5, 8, 22, 0.5)",
-            backdropFilter: "blur(20px)",
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-          }}
-        >
-          <div className="container-custom" style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 800, fontSize: "1.2rem" }}>
-              <Cuboid color="var(--primary)" size={28} />
-              <span className="gradient-text">AR Vision</span>
-            </div>
-            <div style={{ display: "flex", gap: "16px" }}>
-              <Link href="https://github.com/David-Asli/3D-KKN" target="_blank" className="btn-icon">
-                <Code size={20} />
-              </Link>
+                <motion.h1 variants={fadeInUp} style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "24px" }}>
+                  Pengalaman Augmented Reality
+                </motion.h1>
+
+                <motion.p variants={fadeInUp} style={{ fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "480px" }}>
+                  Scan QR Code dan nikmati pengalaman 3D interaktif langsung melalui smartphone Anda. Instan, ringan, dan mendukung lintas platform.
+                </motion.p>
+
+                <motion.div variants={fadeInUp}>
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                    <Link href="/ar" className="btn-primary" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
+                      Mulai Pengalaman AR
+                    </Link>
+                    <Link href="#features" className="btn-secondary" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
+                      Pelajari Lebih Lanjut
+                    </Link>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Hero QR Card - Kolom Kanan */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                style={{ display: "flex", justifyContent: "center" }}
+              >
+                <div style={{ width: "100%", maxWidth: "380px" }}>
+                  {arUrl ? (
+                    <QRCodeDisplay url={arUrl} />
+                  ) : (
+                    <div className="glass-card" style={{ padding: "60px", textAlign: "center", background: "white", color: "#333" }}>
+                      Memuat QR Code...
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
             </div>
           </div>
-        </nav>
+        </section>
 
-        <main>
-          {/* ===== HERO SECTION ===== */}
-          <section style={{ minHeight: "100vh", display: "flex", alignItems: "center", paddingTop: "120px", paddingBottom: "80px" }}>
-            <div className="container-custom">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "60px", alignItems: "center" }}>
-                
-                {/* Hero Content */}
-                <motion.div initial="hidden" animate="visible" variants={staggerContainer} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                  <motion.div variants={fadeInUp} style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                    <div className="hero-badge"><div className="dot"/> AR Ready</div>
-                    <div className="hero-badge" style={{ color: "var(--primary)", borderColor: "rgba(59, 130, 246, 0.2)" }}>WebXR</div>
-                    <div className="hero-badge" style={{ color: "var(--text-secondary)", borderColor: "rgba(255, 255, 255, 0.1)" }}>No Installation</div>
-                  </motion.div>
-
-                  <motion.h1 variants={fadeInUp} style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-                    Experience The Future of <br />
-                    <span className="gradient-text-primary">Augmented Reality</span>
-                  </motion.h1>
-
-                  <motion.p variants={fadeInUp} style={{ fontSize: "1.1rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "500px" }}>
-                    Scan QR Code dan nikmati pengalaman 3D interaktif langsung melalui smartphone Anda. Tanpa perlu install aplikasi, instan, dan mendukung lintas platform.
-                  </motion.p>
-
-                  <motion.div variants={fadeInUp} style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginTop: "10px" }}>
-                    <Link href="/create" className="btn-primary">
-                      Mulai Buat AR <ArrowRight size={18} />
-                    </Link>
-                    <Link href="/ar" className="btn-secondary">
-                      <Camera size={18} /> Buka Kamera
-                    </Link>
-                  </motion.div>
-                </motion.div>
-
-                {/* Hero QR Card */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, rotateY: 10 }} 
-                  animate={{ opacity: 1, scale: 1, rotateY: 0 }} 
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  style={{ display: "flex", justifyContent: "center", perspective: "1000px" }}
-                >
-                  <div style={{ width: "100%", maxWidth: "450px" }}>
-                    {arUrl ? (
-                      <QRCodeDisplay url={arUrl} />
-                    ) : (
-                      <div className="glass-card" style={{ padding: "100px", textAlign: "center" }}>
-                        <div className="pulse" style={{ width: "30px", height: "30px", background: "var(--primary)", borderRadius: "50%", margin: "0 auto 20px" }} />
-                        Initializing AR Engine...
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-
-              </div>
-            </div>
-          </section>
-
-          {/* ===== HOW IT WORKS ===== */}
-          <section style={{ padding: "100px 0", position: "relative" }}>
-            <div className="container-custom">
-              <div style={{ textAlign: "center", marginBottom: "60px" }}>
-                <span className="section-label">Langkah Sederhana</span>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: 700 }}>Bagaimana Cara Kerjanya?</h2>
-              </div>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "30px" }}>
-                {[
-                  { icon: ScanLine, title: "1. Scan QR", desc: "Arahkan kamera HP Anda ke layar laptop untuk scan QR Code." },
-                  { icon: Globe2, title: "2. Buka Link", desc: "Klik link yang muncul. Tidak perlu mendownload aplikasi apa pun." },
-                  { icon: Camera, title: "3. Arahkan Kamera", desc: "Berikan izin kamera, lalu sorot gambar target yang ditentukan." },
-                  { icon: Cuboid, title: "4. 3D Muncul", desc: "Objek 3D akan melayang dan menempel pada gambar dunia nyata!" }
-                ].map((step, idx) => (
-                  <motion.div 
-                    key={idx}
-                    initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
-                    variants={fadeInUp}
-                    className="glass-card"
-                    style={{ padding: "30px", textAlign: "center" }}
-                  >
-                    <div style={{ width: "64px", height: "64px", background: "rgba(59, 130, 246, 0.1)", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", border: "1px solid rgba(59, 130, 246, 0.2)", color: "var(--accent)" }}>
-                      <step.icon size={32} />
-                    </div>
-                    <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "12px" }}>{step.title}</h3>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6 }}>{step.desc}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ===== FEATURES GRID ===== */}
-          <section style={{ padding: "100px 0" }}>
-            <div className="container-custom">
-              <div style={{ textAlign: "center", marginBottom: "60px" }}>
-                <span className="section-label">Kemampuan Sistem</span>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: 700 }}>Fitur Premium AR</h2>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-                {[
-                  { icon: Zap, title: "Real Time AR", desc: "Pelacakan super cepat dan mulus tanpa jeda menggunakan MindAR engine." },
-                  { icon: Layers, title: "Image Tracking", desc: "Ubah poster, buku, atau kartu nama fisik menjadi marker AR yang interaktif." },
-                  { icon: Box, title: "Model GLB Support", desc: "Mendukung format 3D web-standard (GLB/GLTF) dengan kualitas render tinggi." },
-                  { icon: MonitorSmartphone, title: "Cross Platform", desc: "Berjalan sempurna di iOS, Android, maupun Tablet langsung dari browser." },
-                  { icon: Cloud, title: "Cloud Integration", desc: "Sistem upload dinamis terhubung ke ImgBB untuk penyajian data lintas perangkat." }
-                ].map((feature, idx) => (
-                  <motion.div 
-                    key={idx}
-                    initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-                    className="glass-card"
-                    style={{ padding: "32px", display: "flex", gap: "20px", alignItems: "flex-start" }}
-                  >
-                    <div className="feature-icon-box">
-                      <feature.icon size={28} />
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>{feature.title}</h3>
-                      <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6 }}>{feature.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ===== TECH STACK ===== */}
-          <section style={{ padding: "80px 0 120px" }}>
-            <div className="container-custom">
-              <div style={{ textAlign: "center", marginBottom: "40px" }}>
-                <p style={{ color: "var(--text-tertiary)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", fontSize: "0.85rem" }}>
-                  Didukung Oleh Teknologi Terdepan
-                </p>
-              </div>
-              
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px" }}>
-                {["Three.js", "WebXR", "MindAR", "Next.js", "React", "TypeScript", "TailwindCSS"].map((tech, i) => (
-                  <div key={i} className="glass-card" style={{ padding: "12px 24px", display: "flex", alignItems: "center", gap: "8px", borderRadius: "100px", background: "rgba(255,255,255,0.02)" }}>
-                    <Cpu size={16} color="var(--primary)" />
-                    <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{tech}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        </main>
-
-        {/* ===== FOOTER ===== */}
-        <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(20px)" }}>
-          <div className="container-custom" style={{ padding: "60px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "40px" }}>
-            <div style={{ maxWidth: "300px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 800, fontSize: "1.5rem", marginBottom: "16px" }}>
-                <Cuboid color="var(--primary)" size={32} />
-                <span className="gradient-text">AR Vision 3D</span>
-              </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                Platform inovatif untuk menghidupkan objek fisik ke dalam dimensi 3D melalui teknologi Web AR.
-              </p>
+        {/* ===== HOW IT WORKS ===== */}
+        <section style={{ padding: "80px 0", background: "var(--bg-secondary)" }}>
+          <div className="container-custom">
+            <div style={{ textAlign: "center", marginBottom: "50px" }}>
+              <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-primary)" }}>Cara Kerjanya</h2>
+              <p style={{ color: "var(--text-tertiary)", marginTop: "10px" }}>Langkah sederhana memulai WebAR</p>
             </div>
             
-            <div style={{ display: "flex", gap: "40px" }}>
-              <div>
-                <h4 style={{ fontWeight: 700, marginBottom: "16px", color: "white" }}>Navigasi</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <Link href="/create" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Buat Target AR</Link>
-                  <Link href="/ar" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Kamera AR</Link>
-                </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
+              {[
+                { icon: ScanLine, title: "1. Scan QR", desc: "Arahkan kamera HP ke layar untuk scan QR Code." },
+                { icon: Globe2, title: "2. Buka Link", desc: "Akses link dari browser tanpa download aplikasi." },
+                { icon: Camera, title: "3. Izinkan Kamera", desc: "Berikan izin kamera, lalu sorot gambar target." },
+                { icon: Cuboid, title: "4. Interaksi", desc: "Objek 3D akan melayang dan bisa disentuh!" }
+              ].map((step, idx) => (
+                <motion.div 
+                  key={idx}
+                  initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
+                  variants={fadeInUp}
+                  className="glass-card"
+                  style={{ padding: "30px", textAlign: "left", background: "var(--background)" }}
+                >
+                  <div style={{ color: "var(--primary)", marginBottom: "20px" }}>
+                    <step.icon size={32} />
+                  </div>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "10px" }}>{step.title}</h3>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.5 }}>{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== FEATURES GRID ===== */}
+        <section style={{ padding: "80px 0" }}>
+          <div className="container-custom">
+            <div style={{ textAlign: "center", marginBottom: "50px" }}>
+              <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-primary)" }}>Fitur Utama</h2>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+              {[
+                { icon: Zap, title: "Real Time AR", desc: "Pelacakan cepat dan mulus tanpa jeda dengan MindAR." },
+                { icon: Layers, title: "Image Tracking", desc: "Ubah poster atau kartu fisik menjadi marker interaktif." },
+                { icon: Box, title: "3D Model Support", desc: "Mendukung format standar GLB/GLTF dengan render kualitas tinggi." },
+                { icon: MonitorSmartphone, title: "Cross Platform", desc: "Berjalan di iOS, Android, dan Tablet langsung melalui browser." },
+                { icon: Cloud, title: "Cloud Integration", desc: "Sistem upload terpusat berbasis cloud menggunakan Vercel Blob." }
+              ].map((feature, idx) => (
+                <motion.div 
+                  key={idx}
+                  initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+                  className="glass-card"
+                  style={{ padding: "24px", display: "flex", gap: "20px", alignItems: "flex-start" }}
+                >
+                  <div style={{ color: "var(--accent)" }}>
+                    <feature.icon size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "8px" }}>{feature.title}</h3>
+                    <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.5 }}>{feature.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ===== FOOTER ===== */}
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "var(--bg-secondary)" }}>
+        <div className="container-custom" style={{ padding: "40px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "30px" }}>
+          <div style={{ maxWidth: "280px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "1.2rem", marginBottom: "12px" }}>
+              <Cuboid color="var(--primary)" size={24} />
+              <span>AR SIAMPEL 3D</span>
+            </div>
+            <p style={{ color: "var(--text-tertiary)", fontSize: "0.85rem", lineHeight: 1.6 }}>
+              Platform minimalis untuk pengalaman Web Augmented Reality yang cepat dan responsif.
+            </p>
+          </div>
+          
+          <div style={{ display: "flex", gap: "40px" }}>
+            <div>
+              <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "white", fontSize: "0.95rem" }}>Navigasi</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <Link href="/create" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Buat Target AR</Link>
+                <Link href="/ar" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Kamera AR</Link>
               </div>
-              
-              <div>
-                <h4 style={{ fontWeight: 700, marginBottom: "16px", color: "white" }}>Sosial</h4>
-                <div style={{ display: "flex", gap: "12px" }}>
-                  <Link href="#" className="btn-icon" style={{ width: "40px", height: "40px" }}><Code size={18} /></Link>
-                  <Link href="#" className="btn-icon" style={{ width: "40px", height: "40px" }}><User size={18} /></Link>
-                  <Link href="#" className="btn-icon" style={{ width: "40px", height: "40px" }}><Mail size={18} /></Link>
-                </div>
+            </div>
+            
+            <div>
+              <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "white", fontSize: "0.95rem" }}>Sosial</h4>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <Link href="https://www.instagram.com/kkn_bedagung26/" target="_blank" rel="noopener noreferrer" className="btn-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                </Link>
+                <Link href="https://www.tiktok.com/@kknbedagung26" target="_blank" rel="noopener noreferrer" className="btn-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
+                </Link>
+                <Link href="#" className="btn-icon"><User size={16} /></Link>
+                <Link href="#" className="btn-icon"><Mail size={16} /></Link>
               </div>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "20px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "0.85rem" }}>
-            © {new Date().getFullYear()} AR Vision 3D. All rights reserved. | Version 2.0
-          </div>
-        </footer>
-      </div>
-    </>
+        </div>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "16px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "0.8rem" }}>
+          © {new Date().getFullYear()} AR SIAMPEL. KKN DESA BEDAGUNG | ITSNU PEKALONGAN
+        </div>
+      </footer>
+    </div>
   );
 }

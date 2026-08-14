@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AR Vision 3D — Experience The Future",
+  title: "AR SIAMPEL 3D — Experience The Future",
   description:
     "Arahkan kamera HP ke gambar target dan lihat objek 3D muncul di layar. Pengalaman Augmented Reality langsung di browser, tanpa install aplikasi.",
   keywords: ["AR", "augmented reality", "3D", "web AR", "scan gambar", "MindAR"],
   openGraph: {
-    title: "AR Vision 3D",
+    title: "AR SIAMPEL 3D",
     description: "Scan gambar, lihat objek 3D muncul di layar HP kamu.",
     type: "website",
   },

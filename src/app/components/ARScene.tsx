@@ -103,7 +103,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     camera.setAttribute("position", "0 0 0");
     camera.setAttribute("look-controls", "enabled: false");
     camera.setAttribute("cursor", "fuse: false; rayOrigin: mouse;");
-    camera.setAttribute("raycaster", "objects: .clickable");
+    // Gunakan interval 100 (ms) agar raycaster tidak mengecek setiap frame (sangat berat untuk CPU di HP)
+    camera.setAttribute("raycaster", "objects: .clickable; interval: 100;");
     scene.appendChild(camera);
 
     // Multi-Target Setup
@@ -125,25 +126,14 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       model.setAttribute("class", "clickable");
       model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
 
-      // Perbaikan warna Hitam: Model dengan sifat 'Metallic' butuh pantulan (HDRI)
-      // Karena kita AR Kamera (tidak ada HDRI), kita paksa matikan sifat metallic-nya
-      model.addEventListener('model-loaded', () => {
-        const obj3D = (model as any).getObject3D('mesh');
-        if (obj3D) {
-          obj3D.traverse((node: any) => {
-            if (node.isMesh && node.material) {
-              // Jika material terlalu metalik, turunkan agar tidak jadi hitam legam
-              if (node.material.metalness !== undefined && node.material.metalness > 0.1) {
-                node.material.metalness = 0.0;
-                node.material.roughness = 0.8;
-                node.material.needsUpdate = true;
-              }
-            }
-          });
-        }
-      });
-
       target.appendChild(model);
+
+      // TEST BOX: Menambahkan kotak merah untuk mengecek apakah lighting A-Frame berfungsi
+      const testBox = document.createElement("a-box");
+      testBox.setAttribute("position", "1 0 0");
+      testBox.setAttribute("scale", "0.2 0.2 0.2");
+      testBox.setAttribute("color", "red");
+      target.appendChild(testBox);
 
       target.addEventListener("targetFound", () => {
         setStatus("found");
@@ -156,17 +146,17 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       scene.appendChild(target);
     });
 
-    // Lights - Dikembalikan ke versi paling stabil (Ambient + Directional biasa)
+    // Lights - Disesuaikan agar tidak terlalu menyilaukan/membuat model menjadi putih
     const ambientLight = document.createElement("a-light");
     ambientLight.setAttribute("type", "ambient");
     ambientLight.setAttribute("color", "#ffffff");
-    ambientLight.setAttribute("intensity", "1.0"); // Dibuat 1.0 agar cukup terang
+    ambientLight.setAttribute("intensity", "0.6"); 
     scene.appendChild(ambientLight);
 
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
-    dirLight.setAttribute("intensity", "1.0");
+    dirLight.setAttribute("intensity", "0.8");
     dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 

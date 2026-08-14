@@ -13,6 +13,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         return {
           allowedContentTypes: ['model/gltf-binary', 'model/gltf+json', 'application/octet-stream', 'application/json'],
           maximumSizeInBytes: 500 * 1024 * 1024, // 500MB
+          addRandomSuffix: true,
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {

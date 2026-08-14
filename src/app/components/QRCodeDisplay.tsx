@@ -57,76 +57,65 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
 
   return (
     <div
-      className="glass-card"
       style={{
-        padding: "40px",
+        background: "white",
+        borderRadius: "20px",
+        padding: "32px 24px",
         textAlign: "center",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "24px",
-        position: "relative"
+        gap: "20px",
+        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.08)",
+        color: "#1F2937",
+        width: "100%",
+        maxWidth: "400px",
+        margin: "0 auto"
       }}
     >
-      {/* Decorative Glow */}
-      <div style={{
-        position: "absolute",
-        top: "-50px", left: "50%", transform: "translateX(-50%)",
-        width: "150px", height: "150px",
-        background: "var(--accent-glow)",
-        filter: "blur(60px)",
-        borderRadius: "50%",
-        zIndex: 0, pointerEvents: "none"
-      }} />
-
-      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "10px", fontSize: "1.3rem", fontWeight: 700 }}>
-        <CheckCircle2 color="var(--success)" size={28} />
-        <span className="gradient-text-primary">AR Experience Siap</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "1.2rem", fontWeight: 700 }}>
+        <CheckCircle2 color="var(--success)" size={24} />
+        <span>Pindai untuk Memulai AR</span>
       </div>
+
+      <p style={{ color: "#6B7280", fontSize: "0.95rem", lineHeight: 1.5 }}>
+        Pindai kode QR dengan smartphone Anda
+      </p>
 
       {/* QR Code Container */}
       <div
         ref={qrRef}
         style={{
-          position: "relative",
-          zIndex: 1,
           background: "white",
-          padding: "24px",
-          borderRadius: "24px",
+          padding: "16px",
+          borderRadius: "16px",
           display: "inline-block",
-          boxShadow: "0 0 40px rgba(0, 229, 255, 0.3)",
-          border: "4px solid rgba(255,255,255,0.1)"
+          border: "1px solid #F3F4F6",
         }}
       >
         <QRCodeSVG
           value={url}
-          size={240}
+          size={220}
           level="M"
           bgColor="#ffffff"
-          fgColor="#050816"
-          includeMargin={true}
+          fgColor="#111827"
+          includeMargin={false}
         />
       </div>
 
-      <p style={{ position: "relative", zIndex: 1, color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: "400px", lineHeight: 1.6 }}>
-        Scan QR code ini dengan smartphone Anda untuk membuka pengalaman AR. Arahkan kamera ke gambar target.
-      </p>
-
-      {/* Target image preview */}
+      {/* Target image preview (jika dipanggil dari halaman Create) */}
       {targetImage && (
         <div style={{
-          position: "relative", zIndex: 1,
           display: "flex",
           alignItems: "center",
-          gap: "16px",
-          padding: "16px",
-          background: "rgba(59, 130, 246, 0.08)",
-          borderRadius: "16px",
-          border: "1px solid rgba(59, 130, 246, 0.2)",
+          gap: "12px",
+          padding: "12px",
+          background: "#F9FAFB",
+          borderRadius: "12px",
+          border: "1px solid #E5E7EB",
           width: "100%",
-          maxWidth: "400px"
         }}>
-          <div style={{ width: "60px", height: "60px", borderRadius: "10px", overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "8px", overflow: "hidden", flexShrink: 0 }}>
             <img
               src={targetImage}
               alt="Target Preview"
@@ -135,44 +124,48 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
           </div>
           <div style={{ textAlign: "left", flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <ImageIcon size={14} color="var(--accent)" />
-              <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "white" }}>Gambar Target Aktif</p>
+              <ImageIcon size={14} color="var(--primary)" />
+              <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>Gambar Target</p>
             </div>
-            <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-              Arahkan kamera AR ke gambar ini
+            <p style={{ fontSize: "0.75rem", color: "#6B7280", marginTop: "2px" }}>
+              Arahkan kamera ke gambar ini
             </p>
           </div>
         </div>
       )}
 
       {/* Action buttons */}
-      <div style={{ position: "relative", zIndex: 1, display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
-        <button onClick={handleDownloadQR} className="btn-primary" style={{ flex: 1, minWidth: "160px" }}>
-          <Download size={18} />
-          Download QR
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center", width: "100%" }}>
+        <button 
+          onClick={handleDownloadQR} 
+          style={{ 
+            flex: 1, minWidth: "140px", padding: "10px", 
+            background: "#F3F4F6", color: "#374151", 
+            border: "none", borderRadius: "8px", 
+            fontWeight: 500, display: "flex", justifyContent: "center", alignItems: "center", gap: "8px",
+            cursor: "pointer", transition: "background 0.2s"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = "#E5E7EB"}
+          onMouseOut={(e) => e.currentTarget.style.background = "#F3F4F6"}
+        >
+          <Download size={16} />
+          Unduh
         </button>
-        <button onClick={handleCopyLink} className="btn-secondary" style={{ flex: 1, minWidth: "160px" }}>
-          <Copy size={18} />
-          Copy Link
+        <button 
+          onClick={handleCopyLink} 
+          style={{ 
+            flex: 1, minWidth: "140px", padding: "10px", 
+            background: "#DBEAFE", color: "#1D4ED8", 
+            border: "none", borderRadius: "8px", 
+            fontWeight: 500, display: "flex", justifyContent: "center", alignItems: "center", gap: "8px",
+            cursor: "pointer", transition: "background 0.2s"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = "#BFDBFE"}
+          onMouseOut={(e) => e.currentTarget.style.background = "#DBEAFE"}
+        >
+          <Copy size={16} />
+          Salin Link
         </button>
-      </div>
-
-      {/* Link display */}
-      <div
-        style={{
-          position: "relative", zIndex: 1,
-          width: "100%",
-          padding: "16px",
-          background: "rgba(0,0,0,0.4)",
-          borderRadius: "14px",
-          fontSize: "0.8rem",
-          color: "var(--text-tertiary)",
-          wordBreak: "break-all",
-          fontFamily: "monospace",
-          border: "1px solid rgba(255,255,255,0.05)"
-        }}
-      >
-        {url}
       </div>
     </div>
   );

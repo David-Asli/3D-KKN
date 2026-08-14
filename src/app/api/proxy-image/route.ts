@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import https from 'https';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,14 +12,15 @@ export async function GET(request: Request) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return new NextResponse(`Error: ${response.status}`, { status: response.status });
     }
-    
-    const buffer = await response.arrayBuffer();
 
-    return new NextResponse(buffer, {
+    const arrayBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    return new NextResponse(Buffer.from(arrayBuffer), {
       headers: {
-        'Content-Type': response.headers.get('content-type') || 'image/jpeg',
+        'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400',
         'Access-Control-Allow-Origin': '*',
       },
@@ -28,3 +30,4 @@ export async function GET(request: Request) {
     return new NextResponse('Error fetching image', { status: 500 });
   }
 }
+
