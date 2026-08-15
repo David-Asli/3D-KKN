@@ -7,6 +7,8 @@ import Script from "next/script";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye } from "lucide-react";
 
+const ModelViewer = 'model-viewer' as any;
+
 interface SavedTarget {
   id: string; // user_collections ID
   created_at: string;
@@ -294,8 +296,8 @@ export default function CollectionsPage() {
 
             {/* Model Viewer */}
             <div style={{ flex: 1, position: "relative", background: "radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 100%)" }}>
-              {/* @ts-ignore - model-viewer is a web component */}
-              <model-viewer
+              {/* @ts-ignore */}
+              <ModelViewer
                 src={viewingModel}
                 alt="3D Model"
                 auto-rotate
@@ -327,7 +329,7 @@ export default function CollectionsPage() {
                     animation: "loadProgress 2s ease-in-out infinite"
                   }} />
                 </div>
-              </model-viewer>
+              </ModelViewer>
             </div>
 
             {/* Modal Footer */}
