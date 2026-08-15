@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 
@@ -20,9 +21,11 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [session, setSession] = useState<any>(null);
   const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
   const sceneInitialized = useRef(false);
   const [mindBlobUrl, setMindBlobUrl] = useState<string | null>(null);
+  const router = useRouter();
 
   // Create blob URL from mindData if provided
   useEffect(() => {
@@ -75,7 +78,12 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
   }, []);
 
   const handleSaveToCollection = async () => {
-    if (!session || activeIndex === null || activeIndex >= targetIds.length) return;
+    if (!session) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (activeIndex === null || activeIndex >= targetIds.length) return;
     
     setSavingStatus("saving");
     try {
@@ -242,7 +250,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       {/* Target Preview dihapus sesuai permintaan agar tampilan layar bersih */}
 
       {/* Save Button Overlay */}
-      {status === "found" && session && activeIndex !== null && activeIndex < targetIds.length && (
+      {status === "found" && activeIndex !== null && activeIndex < targetIds.length && !showLoginPrompt && (
         <div style={{
           position: "fixed",
           bottom: "100px",
@@ -281,6 +289,73 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
         {status === "scanning" && "Arahkan kamera ke gambar target"}
         {status === "found" && "✓ Target terdeteksi!"}
       </div>
+
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.7)",
+          backdropFilter: "blur(5px)",
+          zIndex: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px"
+        }}>
+          <div style={{
+            background: "rgba(30,30,40,0.9)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            padding: "32px 24px",
+            borderRadius: "20px",
+            maxWidth: "360px",
+            width: "100%",
+            textAlign: "center",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)"
+          }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "12px", color: "white" }}>
+              Anda Belum Login
+            </h3>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "24px" }}>
+              Silakan daftar akun atau login terlebih dahulu agar model 3D ini bisa tersimpan selamanya di koleksi Anda!
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <button 
+                onClick={() => router.push("/auth")}
+                style={{
+                  background: "var(--primary)",
+                  color: "white",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  width: "100%"
+                }}
+              >
+                Login / Daftar Sekarang
+              </button>
+              <button 
+                onClick={() => setShowLoginPrompt(false)}
+                style={{
+                  background: "transparent",
+                  color: "rgba(255,255,255,0.7)",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  width: "100%"
+                }}
+              >
+                Batal (Tetap Lanjutkan AR)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
