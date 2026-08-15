@@ -326,7 +326,7 @@ export default function CreateAR() {
             ) : history.length === 0 ? (
               <p style={{ textAlign: "center", color: "var(--text-tertiary)" }}>Belum ada data AR yang di-upload.</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
                 {history.map((item, index) => {
                   const isActive = index === 0;
                   

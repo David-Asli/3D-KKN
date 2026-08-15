@@ -50,6 +50,7 @@ export default function Home() {
     <div style={{ position: "relative", zIndex: 10 }}>
       {/* ===== NAVBAR ===== */}
       <nav
+        className="navbar-container"
         style={{
           position: "fixed",
           top: 0, left: 0, right: 0,
@@ -63,21 +64,21 @@ export default function Home() {
         }}
       >
         <div className="container-custom" style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "1.1rem" }}>
+          <div className="nav-brand" style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "1.1rem" }}>
             <Cuboid color="var(--primary)" size={24} />
             <span style={{ color: "var(--text-primary)" }}>AR SIAMPEL</span>
           </div>
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             {session ? (
-              <Link href="/collections" className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+              <Link href="/collections" className="btn-secondary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
                 <Heart size={16} /> Koleksi
               </Link>
             ) : (
-              <Link href="/auth" className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
+              <Link href="/auth" className="btn-secondary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
                 Masuk
               </Link>
             )}
-            <Link href="/create" className="btn-primary" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
+            <Link href="/create" className="btn-primary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
               Buat AR
             </Link>
           </div>
@@ -121,11 +122,11 @@ export default function Home() {
                 </motion.p>
 
                 <motion.div variants={fadeInUp}>
-                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                    <Link href="/ar" className="btn-primary" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
+                  <div className="mobile-col" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                    <Link href="/ar" className="btn-primary hero-btn" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
                       Mulai Pengalaman AR
                     </Link>
-                    <Link href="#features" className="btn-secondary" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
+                    <Link href="#features" className="btn-secondary hero-btn" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
                       Pelajari Lebih Lanjut
                     </Link>
                   </div>
@@ -224,7 +225,7 @@ export default function Home() {
 
       {/* ===== FOOTER ===== */}
       <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "var(--bg-secondary)" }}>
-        <div className="container-custom" style={{ padding: "40px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "30px" }}>
+        <div className="container-custom mobile-col" style={{ padding: "40px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "30px" }}>
           <div style={{ maxWidth: "280px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "1.2rem", marginBottom: "12px" }}>
               <Cuboid color="var(--primary)" size={24} />
@@ -235,7 +236,7 @@ export default function Home() {
             </p>
           </div>
           
-          <div style={{ display: "flex", gap: "40px" }}>
+          <div className="mobile-col" style={{ display: "flex", gap: "40px" }}>
             <div>
               <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "white", fontSize: "0.95rem" }}>Navigasi</h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>

@@ -158,7 +158,7 @@ export default function CollectionsPage() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
               {items.map((item) => (
                 <div key={item.id} className="glass-card fade-in" style={{ display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", padding: 0 }}>
                   <div style={{ width: "100%", height: "220px", background: "rgba(0,0,0,0.4)", position: "relative" }}>
