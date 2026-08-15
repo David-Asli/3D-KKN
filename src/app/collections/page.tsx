@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Box, Loader2, LogOut, Trash2 } from "lucide-react";
+import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye } from "lucide-react";
 
 interface SavedTarget {
   id: string; // user_collections ID
@@ -20,6 +21,7 @@ export default function CollectionsPage() {
   const [items, setItems] = useState<SavedTarget[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
+  const [viewingModel, setViewingModel] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchCollections = async (userId: string) => {
@@ -104,13 +106,20 @@ export default function CollectionsPage() {
 
   return (
     <>
+      {/* Load Google Model Viewer */}
+      <Script
+        type="module"
+        src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"
+        strategy="afterInteractive"
+      />
+
       <div className="bg-gradient-animated" />
       <div className="grid-overlay" />
       
       <div style={{ position: "relative", zIndex: 10, minHeight: "100vh", padding: "40px 24px" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "40px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "40px", flexWrap: "wrap", gap: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <Link href="/" className="btn-icon" style={{ textDecoration: "none" }}>
                 <ArrowLeft size={20} />
@@ -164,7 +173,7 @@ export default function CollectionsPage() {
                     )}
                   </div>
                   
-                  <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>
+                  <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: "0.85rem", color: "var(--text-tertiary)" }}>
                         Disimpan: {new Date(item.created_at).toLocaleDateString("id-ID")}
@@ -178,13 +187,39 @@ export default function CollectionsPage() {
                       </button>
                     </div>
                     
-                    <Link 
-                      href={`/ar`}
-                      className="btn-primary" 
-                      style={{ marginTop: "auto", width: "100%", justifyContent: "center", padding: "12px" }}
-                    >
-                      Lihat di AR
-                    </Link>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
+                      {item.ar_targets?.model_url && (
+                        <button
+                          onClick={() => setViewingModel(item.ar_targets.model_url)}
+                          style={{
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            padding: "12px",
+                            background: "linear-gradient(135deg, #6c63ff, #00d4ff)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "10px",
+                            fontWeight: 600,
+                            fontSize: "0.9rem",
+                            cursor: "pointer",
+                            transition: "all 0.2s",
+                            boxShadow: "0 4px 12px rgba(108, 99, 255, 0.3)"
+                          }}
+                        >
+                          <Eye size={16} /> Lihat 3D
+                        </button>
+                      )}
+                      <Link 
+                        href="/ar"
+                        className="btn-primary" 
+                        style={{ flex: 1, justifyContent: "center", padding: "12px", fontSize: "0.9rem", textDecoration: "none", textAlign: "center", display: "flex", alignItems: "center", gap: "8px" }}
+                      >
+                        <RotateCcw size={16} /> AR
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -192,6 +227,140 @@ export default function CollectionsPage() {
           )}
         </div>
       </div>
+
+      {/* 3D Model Viewer Modal */}
+      {viewingModel && (
+        <div 
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(12px)",
+            padding: "20px",
+            animation: "modalFadeIn 0.3s ease-out"
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setViewingModel(null);
+          }}
+        >
+          <div style={{
+            width: "100%",
+            maxWidth: "700px",
+            height: "80vh",
+            maxHeight: "600px",
+            background: "rgba(20, 20, 30, 0.95)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "24px",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(108, 99, 255, 0.15)"
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Box size={20} color="#00d4ff" />
+                <span style={{ fontWeight: 600, fontSize: "1rem", color: "white" }}>3D Model Viewer</span>
+              </div>
+              <button
+                onClick={() => setViewingModel(null)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "none",
+                  color: "white",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.2s"
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Model Viewer */}
+            <div style={{ flex: 1, position: "relative", background: "radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 100%)" }}>
+              {/* @ts-ignore - model-viewer is a web component */}
+              <model-viewer
+                src={viewingModel}
+                alt="3D Model"
+                auto-rotate
+                camera-controls
+                touch-action="pan-y"
+                shadow-intensity="1"
+                shadow-softness="0.5"
+                exposure="1.2"
+                environment-image="neutral"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  outline: "none",
+                  // @ts-ignore
+                  "--poster-color": "transparent",
+                }}
+              >
+                <div slot="progress-bar" style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: "4px",
+                  background: "rgba(255,255,255,0.05)"
+                }}>
+                  <div style={{
+                    height: "100%",
+                    background: "linear-gradient(90deg, #6c63ff, #00d4ff)",
+                    animation: "loadProgress 2s ease-in-out infinite"
+                  }} />
+                </div>
+              </model-viewer>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: "14px 24px",
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              color: "var(--text-tertiary)",
+              fontSize: "0.85rem"
+            }}>
+              <RotateCcw size={14} />
+              <span>Geser untuk memutar • Cubit untuk zoom</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes modalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes loadProgress {
+          0% { width: 0%; }
+          50% { width: 70%; }
+          100% { width: 100%; }
+        }
+        .spin-animation { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </>
   );
 }
