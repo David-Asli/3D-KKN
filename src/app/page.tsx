@@ -4,18 +4,33 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 import QRCodeDisplay from "./components/QRCodeDisplay";
+import { supabase } from "@/lib/supabase";
 import { 
   ScanLine, Cuboid, Zap, 
   Layers, Globe2, Box, Cloud, MonitorSmartphone,
-  Mail, ArrowRight, Camera, Code, User
+  Mail, ArrowRight, Camera, Code, User, LogOut, Heart
 } from "lucide-react";
 
 export default function Home() {
   const [arUrl, setArUrl] = useState<string>("");
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     // Generate the AR URL dynamically based on the current domain
     setArUrl(`${window.location.origin}/ar`);
+    
+    // Check auth session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fadeInUp: Variants = {
@@ -52,7 +67,16 @@ export default function Home() {
             <Cuboid color="var(--primary)" size={24} />
             <span style={{ color: "var(--text-primary)" }}>AR SIAMPEL</span>
           </div>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            {session ? (
+              <Link href="/collections" className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Heart size={16} /> Koleksi
+              </Link>
+            ) : (
+              <Link href="/auth" className="btn-secondary" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
+                Masuk
+              </Link>
+            )}
             <Link href="/create" className="btn-primary" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
               Buat AR
             </Link>

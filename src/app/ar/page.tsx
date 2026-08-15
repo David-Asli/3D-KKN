@@ -16,6 +16,7 @@ function ARPageContent() {
   const [progress, setProgress] = useState(0);
   const [compiledData, setCompiledData] = useState<ArrayBuffer | null>(null);
   const [models, setModels] = useState<string[]>([]);
+  const [targetIds, setTargetIds] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ function ARPageContent() {
         // Ambil maksimal 5 data terbaru dari Supabase untuk Pameran Multi-Target
         const { data, error } = await supabase
           .from("ar_targets")
-          .select("image_url, model_url")
+          .select("id, image_url, model_url")
           .order("created_at", { ascending: false })
           .limit(5);
 
@@ -37,10 +38,12 @@ function ARPageContent() {
         }
 
         const modelUrls: string[] = [];
+        const tIds: string[] = [];
         const htmlImages: HTMLImageElement[] = [];
 
         for (const target of data) {
           modelUrls.push(target.model_url || "");
+          tIds.push(target.id);
           // Ambil gambar melalui proxy agar tidak terkena error CORS di HP
           const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(target.image_url)}`;
           const img = await imageDataUrlToHTMLImage(proxyUrl);
@@ -59,6 +62,7 @@ function ARPageContent() {
 
         setCompiledData(mindBuffer);
         setModels(modelUrls);
+        setTargetIds(tIds);
         setLoading(false);
       } catch (err: any) {
         console.error("Target fetch error:", err);
@@ -170,12 +174,13 @@ function ARPageContent() {
       <ARScene
         mindData={compiledData}
         models={models}
+        targetIds={targetIds}
       />
     );
   }
 
   // Fallback to default demo target
-  return <ARScene mindSrc="/targets.mind" models={[]} />;
+  return <ARScene mindSrc="/targets.mind" models={[]} targetIds={[]} />;
 }
 
 export default function ARPage() {

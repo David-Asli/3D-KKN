@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
+import { supabase } from "@/lib/supabase";
+
 type ARStatus = "loading" | "scanning" | "found";
 
 interface ARSceneProps {
@@ -9,11 +11,15 @@ interface ARSceneProps {
   mindData?: ArrayBuffer; // Direct .mind data (from IndexedDB)
   targetImageSrc?: string; // Target image preview
   models?: string[]; // Array of Custom 3D model URLs
+  targetIds?: string[]; // Array of database Target IDs
 }
 
-export default function ARScene({ mindSrc, mindData, targetImageSrc, models = [] }: ARSceneProps) {
+export default function ARScene({ mindSrc, mindData, targetImageSrc, models = [], targetIds = [] }: ARSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ARStatus>("loading");
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
   const sceneInitialized = useRef(false);
   const [mindBlobUrl, setMindBlobUrl] = useState<string | null>(null);
@@ -61,7 +67,38 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     };
 
     loadAllScripts();
+
+    // Check user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
   }, []);
+
+  const handleSaveToCollection = async () => {
+    if (!session || activeIndex === null || activeIndex >= targetIds.length) return;
+    
+    setSavingStatus("saving");
+    try {
+      const targetId = targetIds[activeIndex];
+      const { error } = await supabase
+        .from("user_collections")
+        .insert([{ user_id: session.user.id, target_id: targetId }]);
+        
+      if (error) {
+        // If it's a unique constraint error (23505), it means already saved
+        if (error.code === '23505') {
+          setSavingStatus("saved");
+        } else {
+          throw error;
+        }
+      } else {
+        setSavingStatus("saved");
+      }
+    } catch (err) {
+      console.error(err);
+      setSavingStatus("error");
+    }
+  };
 
   // Determine the target source URL
   const targetSource = mindBlobUrl || mindSrc || "/targets.mind";
@@ -137,10 +174,13 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
       target.addEventListener("targetFound", () => {
         setStatus("found");
+        setActiveIndex(index);
+        setSavingStatus("idle");
       });
 
       target.addEventListener("targetLost", () => {
         setStatus("scanning");
+        setActiveIndex(null);
       });
 
       scene.appendChild(target);
@@ -149,17 +189,18 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     // Tambahkan decoder draco & meshopt jika file .glb dikompresi dari Blender
     scene.setAttribute("gltf-model", "dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/; meshoptDecoderPath: https://unpkg.com/meshoptimizer/meshopt_decoder.js;");
 
-    // Lights - Intensitas dinaikkan karena physicallyCorrectLights diaktifkan
-    const ambientLight = document.createElement("a-light");
-    ambientLight.setAttribute("type", "ambient");
-    ambientLight.setAttribute("color", "#ffffff");
-    ambientLight.setAttribute("intensity", "2.5"); 
-    scene.appendChild(ambientLight);
+    // Pencahayaan Hemisphere (Sangat efektif untuk menampilkan warna material PBR/GLTF yang gelap)
+    const hemiLight = document.createElement("a-light");
+    hemiLight.setAttribute("type", "hemisphere");
+    hemiLight.setAttribute("color", "#ffffff");
+    hemiLight.setAttribute("groundColor", "#444444");
+    hemiLight.setAttribute("intensity", "2"); 
+    scene.appendChild(hemiLight);
 
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
-    dirLight.setAttribute("intensity", "3.5");
+    dirLight.setAttribute("intensity", "1.5");
     dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 
@@ -199,6 +240,39 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       </a>
 
       {/* Target Preview dihapus sesuai permintaan agar tampilan layar bersih */}
+
+      {/* Save Button Overlay */}
+      {status === "found" && session && activeIndex !== null && activeIndex < targetIds.length && (
+        <div style={{
+          position: "fixed",
+          bottom: "100px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 110,
+        }}>
+          <button 
+            onClick={handleSaveToCollection}
+            disabled={savingStatus === "saving" || savingStatus === "saved"}
+            style={{
+              padding: "12px 24px",
+              background: savingStatus === "saved" ? "#4ade80" : "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "99px",
+              fontWeight: 600,
+              fontSize: "1rem",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              cursor: savingStatus === "saving" || savingStatus === "saved" ? "default" : "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            {savingStatus === "idle" && "❤ Simpan ke Koleksi"}
+            {savingStatus === "saving" && "Menyimpan..."}
+            {savingStatus === "saved" && "✓ Tersimpan"}
+            {savingStatus === "error" && "Gagal Menyimpan"}
+          </button>
+        </div>
+      )}
 
       {/* Status Bar */}
       <div className={`ar-status ${status === "found" ? "found" : ""}`}>
