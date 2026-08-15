@@ -45,7 +45,15 @@ export default function AuthPage() {
         setIsLogin(true);
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      let errorMsg = err.message || "Terjadi kesalahan yang tidak terduga";
+      
+      if (errorMsg.includes("User already registered")) {
+        errorMsg = "Email ini sudah terdaftar. Silakan gunakan opsi 'Masuk' di bawah.";
+      } else if (errorMsg.includes("Invalid login credentials")) {
+        errorMsg = "Email atau password salah.";
+      }
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
