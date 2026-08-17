@@ -146,32 +146,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                 }
               });
 
-              // --- AUTO SCALE & AUTO CENTER ---
-              // Reset skala entity untuk mendapatkan ukuran asli model
-              this.el.object3D.scale.set(1, 1, 1);
-              this.el.object3D.updateMatrixWorld(true);
-
-              // Hitung Bounding Box
-              const box = new window.THREE.Box3().setFromObject(obj);
-              const size = box.getSize(new window.THREE.Vector3());
-              const center = box.getCenter(new window.THREE.Vector3());
-
-              const maxDim = Math.max(size.x, size.y, size.z);
-              if (maxDim > 0) {
-                // Skala agar model selalu berukuran maksimal 0.8 unit (pas dengan kartu/gambar)
-                const targetSize = 0.8;
-                const scale = targetSize / maxDim;
-                this.el.setAttribute("scale", `${scale} ${scale} ${scale}`);
-              }
-
-              // Konversi titik tengah (world space) ke local space dan geser agar terpusat
-              const worldToLocal = new window.THREE.Matrix4().copy(this.el.object3D.matrixWorld).invert();
-              const localCenter = center.applyMatrix4(worldToLocal);
-              
-              obj.position.x -= localCenter.x;
-              obj.position.y -= localCenter.y;
-              obj.position.z -= localCenter.z;
-              // --------------------------------
+              // Auto scale dan auto center dinonaktifkan karena menyebabkan error kalkulasi matriks
+              // pada saat AR target disembunyikan/inisialisasi.
             }
           });
         }
@@ -221,7 +197,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       const model = document.createElement("a-gltf-model");
       model.setAttribute("src", modelUrl);
       
-      model.setAttribute("scale", "0.5 0.5 0.5");
+      model.setAttribute("scale", "0.1 0.1 0.1");
       model.setAttribute("position", "0 0 0");
       model.setAttribute("rotation", "0 0 0");
       model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
