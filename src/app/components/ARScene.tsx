@@ -136,13 +136,19 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
             if (obj) {
               obj.traverse((node: any) => {
                 if (node.isMesh && node.material) {
-                  // Kurangi metalness agar tidak memantulkan warna hitam (jika tidak ada envMap)
-                  if (node.material.metalness > 0.5) {
-                    node.material.metalness = 0.1;
-                    node.material.roughness = 0.8;
-                  }
-                  // Pastikan warna vertex muncul
-                  node.material.needsUpdate = true;
+                  const mats = Array.isArray(node.material) ? node.material : [node.material];
+                  mats.forEach((mat: any) => {
+                    // Paksa material menjadi non-metalik agar warna dasar keluar (tanpa butuh pantulan/HDRI)
+                    if (mat.metalness !== undefined) {
+                      mat.metalness = 0.0;
+                      mat.roughness = 1.0;
+                    }
+                    // Jika model menggunakan vertex colors (warnanya menyatu di titik), paksa render
+                    if (node.geometry && node.geometry.attributes.color) {
+                      mat.vertexColors = true;
+                    }
+                    mat.needsUpdate = true;
+                  });
                 }
               });
 
@@ -196,8 +202,9 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     );
     scene.setAttribute("color-space", "sRGB");
     // Mengaktifkan colorManagement agar warna model tidak pudar, dan
-    // Menggunakan settingan mediump & antialias false untuk mendongkrak FPS (mencegah patah-patah) di HP.
-    scene.setAttribute("renderer", "colorManagement: true; antialias: true; physicallyCorrectLights: true; logarithmicDepthBuffer: false; alpha: true;");
+    // Menggunakan settingan mediump & antialias false untuk mendongkrak FPS di HP.
+    // Menghapus physicallyCorrectLights karena sering membuat model dari Blender over-exposed/under-exposed
+    scene.setAttribute("renderer", "colorManagement: true; antialias: true; logarithmicDepthBuffer: false; alpha: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
@@ -265,25 +272,26 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     // Tambahkan decoder draco & meshopt jika file .glb dikompresi dari Blender
     scene.setAttribute("gltf-model", "dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/; meshoptDecoderPath: https://unpkg.com/meshoptimizer/meshopt_decoder.js;");
 
-    // Pencahayaan Ambient agar tidak ada bagian yang hitam pekat
+    // Pencahayaan Ambient agar warna dasar merata
     const ambientLight = document.createElement("a-light");
     ambientLight.setAttribute("type", "ambient");
     ambientLight.setAttribute("color", "#ffffff");
-    ambientLight.setAttribute("intensity", "1.5");
+    ambientLight.setAttribute("intensity", "0.7");
     scene.appendChild(ambientLight);
 
-    // Pencahayaan Hemisphere (Sangat efektif untuk menampilkan warna material PBR/GLTF yang gelap)
+    // Pencahayaan Hemisphere (Sangat efektif mengisi bayangan gelap)
     const hemiLight = document.createElement("a-light");
     hemiLight.setAttribute("type", "hemisphere");
     hemiLight.setAttribute("color", "#ffffff");
     hemiLight.setAttribute("groundColor", "#444444");
-    hemiLight.setAttribute("intensity", "2"); 
+    hemiLight.setAttribute("intensity", "0.8"); 
     scene.appendChild(hemiLight);
 
+    // Cahaya utama (Matahari)
     const dirLight = document.createElement("a-light");
     dirLight.setAttribute("type", "directional");
     dirLight.setAttribute("color", "#ffffff");
-    dirLight.setAttribute("intensity", "1.5");
+    dirLight.setAttribute("intensity", "1.0");
     dirLight.setAttribute("position", "-1 2 1");
     scene.appendChild(dirLight);
 
