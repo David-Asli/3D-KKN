@@ -146,8 +146,41 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                 }
               });
 
-              // Auto scale dan auto center dinonaktifkan karena menyebabkan error kalkulasi matriks
-              // pada saat AR target disembunyikan/inisialisasi.
+              // --- AUTO SCALE & AUTO CENTER (FIXED) ---
+              // Kita hitung bounding box secara murni (local) tanpa terpengaruh oleh 
+              // parent A-Frame (seperti posisi/skala dari MindAR target).
+              const objParent = obj.parent;
+              if (objParent) objParent.remove(obj);
+
+              // Simpan rotasi/skala asli (meskipun biasanya 0 dan 1)
+              const oldRot = obj.rotation.clone();
+              const oldScale = obj.scale.clone();
+              
+              obj.position.set(0, 0, 0);
+              obj.rotation.set(0, 0, 0);
+              obj.scale.set(1, 1, 1);
+              obj.updateMatrixWorld(true);
+
+              // Kalkulasi bounding box ukuran asli dari GLTF
+              const box = new window.THREE.Box3().setFromObject(obj);
+              const size = box.getSize(new window.THREE.Vector3());
+              const center = box.getCenter(new window.THREE.Vector3());
+
+              // Kembalikan ke parent
+              if (objParent) objParent.add(obj);
+
+              const maxDim = Math.max(size.x, size.y, size.z);
+              if (maxDim > 0) {
+                // Set skala agar ukuran maksimal model pas di 1.0 unit (relatif thd marker)
+                const targetSize = 1.0;
+                const scale = targetSize / maxDim;
+                this.el.setAttribute("scale", `${scale} ${scale} ${scale}`);
+              }
+
+              // Geser mesh ke tengah (agar sumbu rotasi dan titik tumpu tepat di tengah model)
+              obj.position.set(-center.x, -center.y, -center.z);
+              obj.rotation.copy(oldRot);
+              obj.scale.copy(oldScale);
             }
           });
         }
@@ -197,7 +230,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       const model = document.createElement("a-gltf-model");
       model.setAttribute("src", modelUrl);
       
-      model.setAttribute("scale", "0.1 0.1 0.1");
+      model.setAttribute("scale", "1 1 1");
       model.setAttribute("position", "0 0 0");
       model.setAttribute("rotation", "0 0 0");
       model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
