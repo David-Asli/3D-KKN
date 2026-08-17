@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase";
 
+declare global {
+  interface Window {
+    AFRAME: any;
+    THREE: any;
+  }
+}
+
 type ARStatus = "loading" | "scanning" | "found";
 
 interface ARSceneProps {
