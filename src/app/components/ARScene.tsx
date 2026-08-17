@@ -120,6 +120,30 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
     const container = containerRef.current;
 
+    // Daftarkan komponen fix material jika belum ada (untuk mencegah model GLTF terlihat hitam)
+    if (window.AFRAME && !window.AFRAME.components["model-material-fix"]) {
+      window.AFRAME.registerComponent("model-material-fix", {
+        init: function () {
+          this.el.addEventListener("model-loaded", () => {
+            const obj = this.el.getObject3D("mesh");
+            if (obj) {
+              obj.traverse((node: any) => {
+                if (node.isMesh && node.material) {
+                  // Kurangi metalness agar tidak memantulkan warna hitam (jika tidak ada envMap)
+                  if (node.material.metalness > 0.5) {
+                    node.material.metalness = 0.1;
+                    node.material.roughness = 0.8;
+                  }
+                  // Pastikan warna vertex muncul
+                  node.material.needsUpdate = true;
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+
     // Create A-Frame scene
     const scene = document.createElement("a-scene");
     // Menggunakan default filter MindAR, tapi kita fokus ke optimasi grafis (FPS)
@@ -154,7 +178,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
     // Multi-Target Setup
     // Fallback if models array is empty (for demo/default)
-    const activeModels = models.length > 0 ? models : ["/Kursi.glb"];
+    const activeModels = models.length > 0 ? models : ["/lowo.glb"];
 
     activeModels.forEach((modelUrl, index) => {
       const target = document.createElement("a-entity");
@@ -170,6 +194,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       
       model.setAttribute("class", "clickable");
       model.setAttribute("gesture-handler", "minScale: 0.1; maxScale: 10");
+      model.setAttribute("model-material-fix", "");
 
       target.appendChild(model);
 
@@ -196,6 +221,13 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
     // Tambahkan decoder draco & meshopt jika file .glb dikompresi dari Blender
     scene.setAttribute("gltf-model", "dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/; meshoptDecoderPath: https://unpkg.com/meshoptimizer/meshopt_decoder.js;");
+
+    // Pencahayaan Ambient agar tidak ada bagian yang hitam pekat
+    const ambientLight = document.createElement("a-light");
+    ambientLight.setAttribute("type", "ambient");
+    ambientLight.setAttribute("color", "#ffffff");
+    ambientLight.setAttribute("intensity", "1.5");
+    scene.appendChild(ambientLight);
 
     // Pencahayaan Hemisphere (Sangat efektif untuk menampilkan warna material PBR/GLTF yang gelap)
     const hemiLight = document.createElement("a-light");
