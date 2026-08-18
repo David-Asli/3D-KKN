@@ -214,10 +214,6 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                     if (mat.specularIntensity !== undefined) {
                       mat.specularIntensity = 0;
                     }
-                    // Jika model menggunakan vertex colors (warnanya menyatu di titik), paksa render
-                    if (node.geometry && node.geometry.attributes.color) {
-                      mat.vertexColors = true;
-                    }
                     mat.needsUpdate = true;
                   });
                 }
