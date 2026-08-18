@@ -340,19 +340,33 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
       {/* Target Preview dihapus sesuai permintaan agar tampilan layar bersih */}
 
-      {/* Save Button Overlay */}
+      {/* Controls & Save Button Overlay */}
       {status === "found" && activeIndex !== null && activeIndex < targetIds.length && !showLoginPrompt && (
         <div style={{
           position: "fixed",
-          bottom: "100px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 110,
+          bottom: "32px",
+          left: "0",
+          width: "100%",
           display: "flex",
-          gap: "10px"
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "16px",
+          zIndex: 110,
+          padding: "0 20px",
+          pointerEvents: "none", // Prevent clicks on empty space
         }}>
           {/* Control Putar */}
-          <div style={{ display: 'flex', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '99px', padding: '4px', backdropFilter: 'blur(5px)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+          <div style={{ 
+            display: 'flex', 
+            background: 'rgba(15, 23, 42, 0.65)', 
+            borderRadius: '99px', 
+            padding: '6px', 
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            pointerEvents: "auto", // Re-enable clicks
+          }}>
             <button 
               onClick={() => {
                 const models = document.querySelectorAll("a-gltf-model");
@@ -363,14 +377,17 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                 }
               }}
               style={{
-                width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer'
+                width: '44px', height: '44px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer',
+                transition: 'background 0.2s'
               }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               title="Putar Kiri"
             >
               ↺
             </button>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '4px' }} />
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '4px 6px' }} />
             <button 
               onClick={() => {
                 const models = document.querySelectorAll("a-gltf-model");
@@ -381,30 +398,40 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                 }
               }}
               style={{
-                width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer'
+                width: '44px', height: '44px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer',
+                transition: 'background 0.2s'
               }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
               title="Putar Kanan"
             >
               ↻
             </button>
           </div>
           
+          {/* Simpan Button */}
           <button 
             onClick={handleSaveToCollection}
             disabled={savingStatus === "saving" || savingStatus === "saved"}
             style={{
-              padding: "12px 24px",
-              background: savingStatus === "saved" ? "#4ade80" : "var(--primary)",
+              width: "100%",
+              maxWidth: "340px",
+              padding: "16px 24px",
+              background: savingStatus === "saved" ? "linear-gradient(135deg, #10b981, #059669)" : "linear-gradient(135deg, #6c63ff, #4f46e5)",
               color: "white",
               border: "none",
               borderRadius: "99px",
-              fontWeight: 600,
-              fontSize: "1rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              fontWeight: 700,
+              fontSize: "1.05rem",
+              letterSpacing: "0.5px",
+              boxShadow: savingStatus === "saved" ? "0 8px 20px rgba(16, 185, 129, 0.4)" : "0 8px 20px rgba(108, 99, 255, 0.4)",
               cursor: savingStatus === "saving" || savingStatus === "saved" ? "default" : "pointer",
-              transition: "all 0.2s"
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              pointerEvents: "auto",
             }}
+            onMouseOver={(e) => { if(savingStatus !== "saved") e.currentTarget.style.transform = 'translateY(-2px)' }}
+            onMouseOut={(e) => { if(savingStatus !== "saved") e.currentTarget.style.transform = 'translateY(0)' }}
           >
             {savingStatus === "idle" && "❤ Simpan ke Koleksi"}
             {savingStatus === "saving" && "Menyimpan..."}
