@@ -116,6 +116,56 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     }
   };
 
+  const takeScreenshot = useCallback(() => {
+    const video = document.querySelector(".ar-container video") as HTMLVideoElement;
+    const canvas = document.querySelector(".ar-container canvas") as HTMLCanvasElement;
+    if (!video || !canvas) {
+      alert("Kamera belum siap, tunggu sebentar.");
+      return;
+    }
+
+    // Resolusi layar/target screenshot (gunakan resolusi canvas 3D)
+    const targetW = canvas.width;
+    const targetH = canvas.height;
+
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = targetW;
+    tempCanvas.height = targetH;
+    const ctx = tempCanvas.getContext("2d");
+    if (!ctx) return;
+
+    // Kalkulasi untuk simulasi object-fit: cover pada video
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const targetRatio = targetW / targetH;
+    
+    let drawW = targetW;
+    let drawH = targetH;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (videoRatio > targetRatio) {
+      drawW = targetH * videoRatio;
+      offsetX = (targetW - drawW) / 2;
+    } else {
+      drawH = targetW / videoRatio;
+      offsetY = (targetH - drawH) / 2;
+    }
+
+    // Gambar Video (Background)
+    ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+    // Gambar WebGL Canvas (Foreground 3D)
+    ctx.drawImage(canvas, 0, 0, targetW, targetH);
+
+    // Download
+    const dataUrl = tempCanvas.toDataURL("image/jpeg", 0.9);
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `ar-photo-${Date.now()}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, []);
+
   // Determine the target source URL
   const targetSource = mindBlobUrl || mindSrc || "/targets.mind";
 
@@ -389,9 +439,36 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
           cursor: "pointer",
           transition: "all 0.2s"
         }}
-        title="Toggle Fullscreen"
+        title="Layar Penuh"
       >
         ⛶
+      </button>
+
+      {/* Screenshot Button */}
+      <button 
+        onClick={takeScreenshot}
+        style={{
+          position: "fixed",
+          top: "76px",
+          right: "20px",
+          zIndex: 102,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "44px",
+          height: "44px",
+          background: "rgba(15, 23, 42, 0.65)",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "12px",
+          color: "white",
+          fontSize: "1.2rem",
+          cursor: "pointer",
+          transition: "all 0.2s"
+        }}
+        title="Ambil Foto"
+      >
+        📸
       </button>
 
       {/* Controls & Save Button Overlay */}
