@@ -31,6 +31,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
   const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
   const sceneInitialized = useRef(false);
   const [mindBlobUrl, setMindBlobUrl] = useState<string | null>(null);
   const router = useRouter();
@@ -156,6 +157,10 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
     // Gambar WebGL Canvas (Foreground 3D)
     ctx.drawImage(canvas, 0, 0, targetW, targetH);
+
+    // Trigger flash effect
+    setIsFlashing(true);
+    setTimeout(() => setIsFlashing(false), 200);
 
     // Download
     const dataUrl = tempCanvas.toDataURL("image/jpeg", 0.9);
@@ -400,6 +405,19 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
           display: none !important;
         }
       `}} />
+
+      {/* Flash Effect Overlay */}
+      <div 
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "white",
+          zIndex: 9999,
+          pointerEvents: "none",
+          opacity: isFlashing ? 1 : 0,
+          transition: "opacity 0.1s ease-out",
+        }}
+      />
 
       {/* Back Button */}
       <a href="/" className="ar-back-btn">
