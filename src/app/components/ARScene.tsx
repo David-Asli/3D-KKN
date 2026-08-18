@@ -26,6 +26,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ARStatus>("loading");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [modelRotations, setModelRotations] = useState<Record<number, number>>({});
   const [session, setSession] = useState<any>(null);
   const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -246,7 +247,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
       
       model.setAttribute("scale", "1 1 1");
       model.setAttribute("position", "0 0 0");
-      model.setAttribute("rotation", "0 0 0");
+      model.setAttribute("rotation", `0 ${modelRotations[index] || 0} 0`);
       model.setAttribute("animation-mixer", "loop: repeat; timeScale: 0.75");
       
       model.setAttribute("class", "clickable");
@@ -347,7 +348,35 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 110,
+          display: "flex",
+          gap: "10px"
         }}>
+          <button 
+            onClick={() => {
+              // Cari model yang sedang aktif dan putar 180 derajat
+              const models = document.querySelectorAll("a-gltf-model");
+              if (models[activeIndex]) {
+                const currentRot = models[activeIndex].getAttribute("rotation") as any;
+                const newY = (currentRot.y + 180) % 360;
+                models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
+              }
+            }}
+            style={{
+              padding: "12px 24px",
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "99px",
+              fontWeight: 600,
+              fontSize: "1rem",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            🔄 Putar
+          </button>
+          
           <button 
             onClick={handleSaveToCollection}
             disabled={savingStatus === "saving" || savingStatus === "saved"}
