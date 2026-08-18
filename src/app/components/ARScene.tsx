@@ -155,6 +155,13 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
     // Gambar Video (Background)
     ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+
+    // Trik pamungkas WebGL: Paksa render sesaat sebelum difoto agar buffer tidak kosong
+    const scene = document.querySelector("a-scene") as any;
+    if (scene && scene.renderer && scene.camera) {
+      scene.renderer.render(scene.object3D, scene.camera);
+    }
+
     // Gambar WebGL Canvas (Foreground 3D)
     ctx.drawImage(canvas, 0, 0, targetW, targetH);
 
