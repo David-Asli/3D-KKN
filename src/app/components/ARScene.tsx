@@ -340,6 +340,43 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
       {/* Target Preview dihapus sesuai permintaan agar tampilan layar bersih */}
 
+      {/* Fullscreen Button */}
+      <button 
+        onClick={() => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+              console.log("Error attempting to enable fullscreen:", err.message);
+            });
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            }
+          }
+        }}
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          zIndex: 102,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "44px",
+          height: "44px",
+          background: "rgba(15, 23, 42, 0.65)",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "12px",
+          color: "white",
+          fontSize: "1.2rem",
+          cursor: "pointer",
+          transition: "all 0.2s"
+        }}
+        title="Toggle Fullscreen"
+      >
+        ⛶
+      </button>
+
       {/* Controls & Save Button Overlay */}
       {status === "found" && activeIndex !== null && activeIndex < targetIds.length && !showLoginPrompt && (
         <div style={{
