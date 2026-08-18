@@ -262,7 +262,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
     // Mengaktifkan colorManagement agar warna model tidak pudar, dan
     // Menggunakan settingan mediump & antialias false untuk mendongkrak FPS di HP.
     // Menghapus physicallyCorrectLights karena sering membuat model dari Blender over-exposed/under-exposed
-    scene.setAttribute("renderer", "colorManagement: true; antialias: true; logarithmicDepthBuffer: false; alpha: true;");
+    scene.setAttribute("renderer", "colorManagement: true; antialias: true; logarithmicDepthBuffer: false; alpha: true; preserveDrawingBuffer: true;");
     scene.setAttribute("vr-mode-ui", "enabled: false");
     scene.setAttribute("device-orientation-permission-ui", "enabled: false");
     scene.setAttribute("embedded", "");
