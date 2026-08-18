@@ -351,31 +351,44 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
           display: "flex",
           gap: "10px"
         }}>
-          <button 
-            onClick={() => {
-              // Cari model yang sedang aktif dan putar 180 derajat
-              const models = document.querySelectorAll("a-gltf-model");
-              if (models[activeIndex]) {
-                const currentRot = models[activeIndex].getAttribute("rotation") as any;
-                const newY = (currentRot.y + 180) % 360;
-                models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
-              }
-            }}
-            style={{
-              padding: "12px 24px",
-              background: "#3b82f6",
-              color: "white",
-              border: "none",
-              borderRadius: "99px",
-              fontWeight: 600,
-              fontSize: "1rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            🔄 Putar
-          </button>
+          {/* Control Putar */}
+          <div style={{ display: 'flex', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '99px', padding: '4px', backdropFilter: 'blur(5px)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+            <button 
+              onClick={() => {
+                const models = document.querySelectorAll("a-gltf-model");
+                if (models[activeIndex]) {
+                  const currentRot = models[activeIndex].getAttribute("rotation") as any;
+                  const newY = (currentRot.y - 45) % 360;
+                  models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
+                }
+              }}
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer'
+              }}
+              title="Putar Kiri"
+            >
+              ↺
+            </button>
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '4px' }} />
+            <button 
+              onClick={() => {
+                const models = document.querySelectorAll("a-gltf-model");
+                if (models[activeIndex]) {
+                  const currentRot = models[activeIndex].getAttribute("rotation") as any;
+                  const newY = (currentRot.y + 45) % 360;
+                  models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
+                }
+              }}
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer'
+              }}
+              title="Putar Kanan"
+            >
+              ↻
+            </button>
+          </div>
           
           <button 
             onClick={handleSaveToCollection}
