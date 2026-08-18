@@ -118,7 +118,8 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
 
   const takeScreenshot = useCallback(() => {
     const video = document.querySelector(".ar-container video") as HTMLVideoElement;
-    const canvas = document.querySelector(".ar-container canvas") as HTMLCanvasElement;
+    // Explicitly target A-Frame's WebGL canvas, not MindAR's hidden processing canvas
+    const canvas = document.querySelector(".ar-container canvas.a-canvas") as HTMLCanvasElement;
     if (!video || !canvas) {
       alert("Kamera belum siap, tunggu sebentar.");
       return;
