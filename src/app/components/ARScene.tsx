@@ -333,6 +333,23 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
         }}
       />
 
+      {/* Force Fullscreen Video & Hide VR Button via CSS */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .ar-container video, 
+        .ar-container canvas, 
+        .mindar-ui-overlay {
+          object-fit: cover !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+        .a-enter-vr {
+          display: none !important;
+        }
+      `}} />
+
       {/* Back Button */}
       <a href="/" className="ar-back-btn">
         ← Kembali
