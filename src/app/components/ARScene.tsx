@@ -143,6 +143,13 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
                       mat.metalness = 0.0;
                       mat.roughness = 1.0;
                     }
+                    // Reset IOR dan Specular jika ada nilai abnormal dari exporter (contoh IOR: 1000)
+                    if (mat.ior !== undefined) {
+                      mat.ior = 1.5; 
+                    }
+                    if (mat.specularIntensity !== undefined) {
+                      mat.specularIntensity = 0;
+                    }
                     // Jika model menggunakan vertex colors (warnanya menyatu di titik), paksa render
                     if (node.geometry && node.geometry.attributes.color) {
                       mat.vertexColors = true;
