@@ -483,6 +483,7 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
           padding: "0 20px",
           pointerEvents: "none",
         }}>
+          {/* Camera Shutter Row (Now placed above the Save button for better ergonomics or keep as is? Usually shutter is at the very bottom. Let's put shutter at bottom, save button above it.) */}
           {/* Simpan Button */}
           <button 
             onClick={handleSaveToCollection}
@@ -512,94 +513,81 @@ export default function ARScene({ mindSrc, mindData, targetImageSrc, models = []
             {savingStatus === "error" && "Gagal Menyimpan"}
           </button>
 
-          {/* Camera Shutter Row */}
+          {/* Camera Controls Row */}
           <div style={{
             position: "relative",
             width: "100%",
-            maxWidth: "400px",
-            height: "80px",
+            maxWidth: "340px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            gap: "32px",
             pointerEvents: "none",
           }}>
             {/* Control Putar (Kiri) */}
-            <div style={{ 
-              position: "absolute",
-              left: "0",
-              display: 'flex', 
-              background: 'rgba(15, 23, 42, 0.65)', 
-              borderRadius: '99px', 
-              padding: '6px', 
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.05)',
-              pointerEvents: "auto",
-            }}>
-              <button 
-                onClick={() => {
-                  const models = document.querySelectorAll("a-gltf-model");
-                  if (models[activeIndex]) {
-                    const currentRot = models[activeIndex].getAttribute("rotation") as any;
-                    const newY = (currentRot.y - 45) % 360;
-                    models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
-                  }
-                }}
-                style={{
-                  width: '44px', height: '44px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                title="Putar Kiri"
-              >
-                ↺
-              </button>
-              <div style={{ width: '1px', background: 'rgba(255,255,255,0.15)', margin: '4px 6px' }} />
-              <button 
-                onClick={() => {
-                  const models = document.querySelectorAll("a-gltf-model");
-                  if (models[activeIndex]) {
-                    const currentRot = models[activeIndex].getAttribute("rotation") as any;
-                    const newY = (currentRot.y + 45) % 360;
-                    models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
-                  }
-                }}
-                style={{
-                  width: '44px', height: '44px', borderRadius: '50%', background: 'transparent', color: 'white', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                title="Putar Kanan"
-              >
-                ↻
-              </button>
-            </div>
+            <button 
+              onClick={() => {
+                const models = document.querySelectorAll("a-gltf-model");
+                if (models[activeIndex]) {
+                  const currentRot = models[activeIndex].getAttribute("rotation") as any;
+                  const newY = (currentRot.y - 45) % 360;
+                  models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
+                }
+              }}
+              style={{
+                width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(15, 23, 42, 0.75)', color: 'white', border: '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', cursor: 'pointer',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', pointerEvents: "auto", transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.75)'}
+              title="Putar Kiri"
+            >
+              ↺
+            </button>
 
             {/* Shutter Button (Tengah) */}
             <button
               onClick={takeScreenshot}
               style={{
-                width: "72px",
-                height: "72px",
+                width: "76px",
+                height: "76px",
                 borderRadius: "50%",
                 background: "white",
                 border: "6px solid rgba(255, 255, 255, 0.4)",
                 backgroundClip: "padding-box",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
                 cursor: "pointer",
                 pointerEvents: "auto",
                 transition: "transform 0.1s, background 0.2s",
               }}
-              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.92)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               title="Ambil Foto"
             />
+
+            {/* Control Putar (Kanan) */}
+            <button 
+              onClick={() => {
+                const models = document.querySelectorAll("a-gltf-model");
+                if (models[activeIndex]) {
+                  const currentRot = models[activeIndex].getAttribute("rotation") as any;
+                  const newY = (currentRot.y + 45) % 360;
+                  models[activeIndex].setAttribute("rotation", `0 ${newY} 0`);
+                }
+              }}
+              style={{
+                width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(15, 23, 42, 0.75)', color: 'white', border: '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', cursor: 'pointer',
+                backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', pointerEvents: "auto", transition: 'all 0.2s', boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.75)'}
+              title="Putar Kanan"
+            >
+              ↻
+            </button>
           </div>
         </div>
       )}
