@@ -25,7 +25,23 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const [viewingModel, setViewingModel] = useState<string | null>(null);
+  const [voucherClaimed, setVoucherClaimed] = useState(false);
+  const [claimError, setClaimError] = useState("");
   const router = useRouter();
+
+  const handleClaimVoucher = () => {
+    const claimedBy = localStorage.getItem("siampel_voucher_claimed_by");
+    if (!claimedBy) {
+      localStorage.setItem("siampel_voucher_claimed_by", userEmail);
+      setVoucherClaimed(true);
+      setClaimError("");
+    } else if (claimedBy === userEmail) {
+      setVoucherClaimed(true);
+      setClaimError("");
+    } else {
+      setClaimError("Maaf, perangkat (HP) ini sudah pernah mengklaim voucher menggunakan akun lain.");
+    }
+  };
 
   const fetchCollections = async (userId: string) => {
     try {
@@ -215,20 +231,53 @@ export default function CollectionsPage() {
                   Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
                 </p>
                 
-                <div style={{
-                  background: "rgba(0,0,0,0.5)",
-                  border: "2px dashed rgba(234, 179, 8, 0.5)",
-                  padding: "16px 32px",
-                  borderRadius: "12px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "12px"
-                }}>
-                  <Gift size={24} color="#eab308" />
-                  <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "2px" }}>
-                    SIAMPEL-FREE
-                  </span>
-                </div>
+                {!voucherClaimed ? (
+                  <>
+                    <button 
+                      onClick={handleClaimVoucher}
+                      style={{
+                        background: "linear-gradient(135deg, #eab308, #ca8a04)",
+                        color: "#0f172a",
+                        border: "none",
+                        padding: "16px 32px",
+                        borderRadius: "12px",
+                        fontSize: "1.1rem",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 12px rgba(234, 179, 8, 0.4)",
+                        transition: "transform 0.2s"
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                      onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                    >
+                      <Gift size={20} />
+                      Klaim Voucher Sekarang
+                    </button>
+                    {claimError && (
+                      <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
+                        {claimError}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div style={{
+                    background: "rgba(0,0,0,0.5)",
+                    border: "2px dashed rgba(234, 179, 8, 0.5)",
+                    padding: "16px 32px",
+                    borderRadius: "12px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "12px"
+                  }}>
+                    <Gift size={24} color="#eab308" />
+                    <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "2px" }}>
+                      SIAMPEL-FREE
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
