@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye, Gift, Coffee, Sparkles } from "lucide-react";
+import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye, Gift, Coffee, Sparkles, Download } from "lucide-react";
+import html2canvas from "html2canvas";
 
 const ModelViewer = 'model-viewer' as any;
 
@@ -25,21 +26,91 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const [viewingModel, setViewingModel] = useState<string | null>(null);
-  const [voucherClaimed, setVoucherClaimed] = useState(false);
+  const [voucherInfo, setVoucherInfo] = useState<{ claimed: boolean; sequence: number | null }>({ claimed: false, sequence: null });
   const [claimError, setClaimError] = useState("");
+  const [checking, setChecking] = useState(false);
   const router = useRouter();
 
-  const handleClaimVoucher = () => {
-    const claimedBy = localStorage.getItem("siampel_voucher_claimed_by");
-    if (!claimedBy) {
-      localStorage.setItem("siampel_voucher_claimed_by", userEmail);
-      setVoucherClaimed(true);
-      setClaimError("");
-    } else if (claimedBy === userEmail) {
-      setVoucherClaimed(true);
-      setClaimError("");
-    } else {
-      setClaimError("Maaf, perangkat (HP) ini sudah pernah mengklaim voucher menggunakan akun lain.");
+  const handleClaimVoucher = async () => {
+    setChecking(true);
+    try {
+      const claimedBy = localStorage.getItem("siampel_voucher_claimed_by");
+      if (claimedBy && claimedBy !== userEmail) {
+        setClaimError("Maaf, perangkat (HP) ini sudah pernah mengklaim voucher menggunakan akun lain.");
+        setChecking(false);
+        return;
+      }
+
+      // Check if user already claimed in DB
+      const { data: existingClaim, error: fetchErr } = await supabase
+        .from("voucher_claims")
+        .select("id")
+        .eq("user_email", userEmail)
+        .single();
+
+      if (existingClaim) {
+        localStorage.setItem("siampel_voucher_claimed_by", userEmail);
+        setVoucherInfo({ claimed: true, sequence: existingClaim.id });
+        setClaimError("");
+        setChecking(false);
+        return;
+      }
+
+      // If not claimed, check global quota
+      const { count, error: countErr } = await supabase
+        .from("voucher_claims")
+        .select("*", { count: 'exact', head: true });
+
+      if (count !== null && count >= 20) {
+        setClaimError("Maaf, kuota voucher (0/20) sudah habis diklaim.");
+        setChecking(false);
+        return;
+      }
+
+      // Try to claim
+      const { data: newClaim, error: insertErr } = await supabase
+        .from("voucher_claims")
+        .insert([{ user_email: userEmail, device_id: 'browser' }])
+        .select("id")
+        .single();
+
+      if (insertErr) {
+        if (insertErr.code === '23505') { // unique violation
+          const { data: retryClaim } = await supabase.from("voucher_claims").select("id").eq("user_email", userEmail).single();
+          if (retryClaim) {
+            localStorage.setItem("siampel_voucher_claimed_by", userEmail);
+            setVoucherInfo({ claimed: true, sequence: retryClaim.id });
+          }
+        } else {
+          throw insertErr;
+        }
+      } else if (newClaim) {
+        localStorage.setItem("siampel_voucher_claimed_by", userEmail);
+        setVoucherInfo({ claimed: true, sequence: newClaim.id });
+        setClaimError("");
+      }
+
+    } catch (e) {
+      console.error(e);
+      setClaimError("Terjadi kesalahan saat mengklaim voucher.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    const element = document.getElementById("voucher-card");
+    if (!element) return;
+    
+    try {
+      const canvas = await html2canvas(element, { backgroundColor: null, scale: 2 });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = `Voucher-Siampel-${userEmail}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to download voucher", err);
     }
   };
 
@@ -174,111 +245,151 @@ export default function CollectionsPage() {
 
           {/* VOUCHER UI */}
           {totalTargets > 0 && items.length >= totalTargets && (
-            <div className="fade-in" style={{
-              background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-              borderRadius: "20px",
-              padding: "2px",
-              marginBottom: "40px",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 20px 40px -15px rgba(234, 179, 8, 0.3)"
-            }}>
-              {/* Animated glowing border effect */}
-              <div style={{
-                position: "absolute",
-                top: "-50%",
-                left: "-50%",
-                width: "200%",
-                height: "200%",
-                background: "conic-gradient(from 0deg, transparent 0 340deg, #eab308 360deg)",
-                animation: "spin 4s linear infinite",
-                zIndex: 0
-              }} />
-              
-              <div style={{
-                background: "linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98))",
-                backdropFilter: "blur(10px)",
-                borderRadius: "18px",
-                padding: "32px 24px",
+            <div className="fade-in" style={{ marginBottom: "40px" }}>
+              <div id="voucher-card" style={{
+                background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                borderRadius: "20px",
+                padding: "2px",
                 position: "relative",
-                zIndex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-                border: "1px solid rgba(234, 179, 8, 0.2)"
+                overflow: "hidden",
+                boxShadow: "0 20px 40px -15px rgba(234, 179, 8, 0.3)"
               }}>
+                {/* Animated glowing border effect */}
                 <div style={{
-                  background: "rgba(234, 179, 8, 0.1)",
-                  padding: "16px",
-                  borderRadius: "50%",
-                  marginBottom: "16px",
-                  color: "#eab308",
-                  border: "1px solid rgba(234, 179, 8, 0.3)"
+                  position: "absolute",
+                  top: "-50%",
+                  left: "-50%",
+                  width: "200%",
+                  height: "200%",
+                  background: "conic-gradient(from 0deg, transparent 0 340deg, #eab308 360deg)",
+                  animation: "spin 4s linear infinite",
+                  zIndex: 0
+                }} />
+                
+                <div style={{
+                  background: "linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98))",
+                  backdropFilter: "blur(10px)",
+                  borderRadius: "18px",
+                  padding: "32px 24px",
+                  position: "relative",
+                  zIndex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  border: "1px solid rgba(234, 179, 8, 0.2)"
                 }}>
-                  <Coffee size={40} />
-                </div>
-                
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <Sparkles size={20} color="#eab308" />
-                  <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#eab308", margin: 0 }}>
-                    Koleksi Lengkap!
-                  </h2>
-                  <Sparkles size={20} color="#eab308" />
-                </div>
-                
-                <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px", maxWidth: "500px" }}>
-                  Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
-                </p>
-                
-                {!voucherClaimed ? (
-                  <>
-                    <button 
-                      onClick={handleClaimVoucher}
-                      style={{
-                        background: "linear-gradient(135deg, #eab308, #ca8a04)",
-                        color: "#0f172a",
-                        border: "none",
+                  <div style={{
+                    background: "rgba(234, 179, 8, 0.1)",
+                    padding: "16px",
+                    borderRadius: "50%",
+                    marginBottom: "16px",
+                    color: "#eab308",
+                    border: "1px solid rgba(234, 179, 8, 0.3)"
+                  }}>
+                    <Coffee size={40} />
+                  </div>
+                  
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                    <Sparkles size={20} color="#eab308" />
+                    <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#eab308", margin: 0 }}>
+                      Koleksi Lengkap!
+                    </h2>
+                    <Sparkles size={20} color="#eab308" />
+                  </div>
+                  
+                  <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px", maxWidth: "500px" }}>
+                    Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
+                  </p>
+                  
+                  {!voucherInfo.claimed ? (
+                    <>
+                      <button 
+                        onClick={handleClaimVoucher}
+                        disabled={checking}
+                        style={{
+                          background: checking ? "gray" : "linear-gradient(135deg, #eab308, #ca8a04)",
+                          color: "#0f172a",
+                          border: "none",
+                          padding: "16px 32px",
+                          borderRadius: "12px",
+                          fontSize: "1.1rem",
+                          fontWeight: 800,
+                          cursor: checking ? "not-allowed" : "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          boxShadow: checking ? "none" : "0 4px 12px rgba(234, 179, 8, 0.4)",
+                          transition: "transform 0.2s"
+                        }}
+                        onMouseOver={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1.05)"; }}
+                        onMouseOut={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1)"; }}
+                      >
+                        {checking ? <Loader2 size={20} className="spin-animation" /> : <Gift size={20} />}
+                        {checking ? "Memproses..." : "Klaim Voucher Sekarang"}
+                      </button>
+                      {claimError && (
+                        <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
+                          {claimError}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+                      <div style={{
+                        background: "rgba(0,0,0,0.5)",
+                        border: "2px dashed rgba(234, 179, 8, 0.5)",
                         padding: "16px 32px",
                         borderRadius: "12px",
-                        fontSize: "1.1rem",
-                        fontWeight: 800,
-                        cursor: "pointer",
                         display: "flex",
+                        flexDirection: "column",
                         alignItems: "center",
-                        gap: "8px",
-                        boxShadow: "0 4px 12px rgba(234, 179, 8, 0.4)",
-                        transition: "transform 0.2s"
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-                      onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
-                    >
-                      <Gift size={20} />
-                      Klaim Voucher Sekarang
-                    </button>
-                    {claimError && (
-                      <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
-                        {claimError}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <div style={{
-                    background: "rgba(0,0,0,0.5)",
-                    border: "2px dashed rgba(234, 179, 8, 0.5)",
-                    padding: "16px 32px",
-                    borderRadius: "12px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "12px"
-                  }}>
-                    <Gift size={24} color="#eab308" />
-                    <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "2px" }}>
-                      SIAMPEL-FREE
-                    </span>
-                  </div>
-                )}
+                        gap: "8px"
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <Gift size={24} color="#eab308" />
+                          <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "2px" }}>
+                            SIAMPEL-FREE
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "1rem", color: "#eab308", fontWeight: 600 }}>
+                          Voucher #{String(voucherInfo.sequence).padStart(2, '0')} / 20
+                        </div>
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-tertiary)" }}>
+                          {userEmail}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Download Button outside the card so it doesn't get captured in the image */}
+              {voucherInfo.claimed && (
+                <button 
+                  onClick={handleDownload}
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    margin: "16px auto 0",
+                    transition: "background 0.2s"
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                >
+                  <Download size={18} />
+                  Unduh Gambar Voucher
+                </button>
+              )}
             </div>
           )}
 
