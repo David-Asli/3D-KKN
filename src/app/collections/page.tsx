@@ -410,8 +410,6 @@ export default function CollectionsPage() {
                   </div>
                 </div>
               )}
-              </div>
-
               {/* Download Button outside the card so it doesn't get captured in the image */}
               {voucherInfo.claimed && (
                 <button 
