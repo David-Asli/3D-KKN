@@ -246,122 +246,170 @@ export default function CollectionsPage() {
           {/* VOUCHER UI */}
           {totalTargets > 0 && items.length >= totalTargets && (
             <div className="fade-in" style={{ marginBottom: "40px" }}>
-              <div id="voucher-card" style={{
-                background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-                borderRadius: "20px",
-                padding: "2px",
-                position: "relative",
-                overflow: "hidden",
-                boxShadow: "0 20px 40px -15px rgba(234, 179, 8, 0.3)"
-              }}>
-                {/* Animated glowing border effect */}
+              {!voucherInfo.claimed ? (
                 <div style={{
-                  position: "absolute",
-                  top: "-50%",
-                  left: "-50%",
-                  width: "200%",
-                  height: "200%",
-                  background: "conic-gradient(from 0deg, transparent 0 340deg, #eab308 360deg)",
-                  animation: "spin 4s linear infinite",
-                  zIndex: 0
-                }} />
-                
-                <div style={{
-                  background: "linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98))",
-                  backdropFilter: "blur(10px)",
-                  borderRadius: "18px",
-                  padding: "32px 24px",
+                  background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                  borderRadius: "20px",
+                  padding: "2px",
                   position: "relative",
-                  zIndex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  border: "1px solid rgba(234, 179, 8, 0.2)"
+                  overflow: "hidden",
+                  boxShadow: "0 20px 40px -15px rgba(234, 179, 8, 0.3)"
                 }}>
+                  {/* Animated glowing border effect */}
                   <div style={{
-                    background: "rgba(234, 179, 8, 0.1)",
-                    padding: "16px",
-                    borderRadius: "50%",
-                    marginBottom: "16px",
-                    color: "#eab308",
-                    border: "1px solid rgba(234, 179, 8, 0.3)"
+                    position: "absolute",
+                    top: "-50%",
+                    left: "-50%",
+                    width: "200%",
+                    height: "200%",
+                    background: "conic-gradient(from 0deg, transparent 0 340deg, #eab308 360deg)",
+                    animation: "spin 4s linear infinite",
+                    zIndex: 0
+                  }} />
+                  
+                  <div style={{
+                    background: "linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98))",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: "18px",
+                    padding: "32px 24px",
+                    position: "relative",
+                    zIndex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    border: "1px solid rgba(234, 179, 8, 0.2)"
                   }}>
-                    <Coffee size={40} />
-                  </div>
-                  
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    <Sparkles size={20} color="#eab308" />
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#eab308", margin: 0 }}>
-                      Koleksi Lengkap!
-                    </h2>
-                    <Sparkles size={20} color="#eab308" />
-                  </div>
-                  
-                  <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px", maxWidth: "500px" }}>
-                    Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
-                  </p>
-                  
-                  {!voucherInfo.claimed ? (
-                    <>
-                      <button 
-                        onClick={handleClaimVoucher}
-                        disabled={checking}
-                        style={{
-                          background: checking ? "gray" : "linear-gradient(135deg, #eab308, #ca8a04)",
-                          color: "#0f172a",
-                          border: "none",
-                          padding: "16px 32px",
-                          borderRadius: "12px",
-                          fontSize: "1.1rem",
-                          fontWeight: 800,
-                          cursor: checking ? "not-allowed" : "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          boxShadow: checking ? "none" : "0 4px 12px rgba(234, 179, 8, 0.4)",
-                          transition: "transform 0.2s"
-                        }}
-                        onMouseOver={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1.05)"; }}
-                        onMouseOut={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1)"; }}
-                      >
-                        {checking ? <Loader2 size={20} className="spin-animation" /> : <Gift size={20} />}
-                        {checking ? "Memproses..." : "Klaim Voucher Sekarang"}
-                      </button>
-                      {claimError && (
-                        <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
-                          {claimError}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-                      <div style={{
-                        background: "rgba(0,0,0,0.5)",
-                        border: "2px dashed rgba(234, 179, 8, 0.5)",
+                    <div style={{
+                      background: "rgba(234, 179, 8, 0.1)",
+                      padding: "16px",
+                      borderRadius: "50%",
+                      marginBottom: "16px",
+                      color: "#eab308",
+                      border: "1px solid rgba(234, 179, 8, 0.3)"
+                    }}>
+                      <Coffee size={40} />
+                    </div>
+                    
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <Sparkles size={20} color="#eab308" />
+                      <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#eab308", margin: 0 }}>
+                        Koleksi Lengkap!
+                      </h2>
+                      <Sparkles size={20} color="#eab308" />
+                    </div>
+                    
+                    <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px", maxWidth: "500px" }}>
+                      Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
+                    </p>
+                    
+                    <button 
+                      onClick={handleClaimVoucher}
+                      disabled={checking}
+                      style={{
+                        background: checking ? "gray" : "linear-gradient(135deg, #eab308, #ca8a04)",
+                        color: "#0f172a",
+                        border: "none",
                         padding: "16px 32px",
                         borderRadius: "12px",
+                        fontSize: "1.1rem",
+                        fontWeight: 800,
+                        cursor: checking ? "not-allowed" : "pointer",
                         display: "flex",
-                        flexDirection: "column",
                         alignItems: "center",
-                        gap: "8px"
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                          <Gift size={24} color="#eab308" />
-                          <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "2px" }}>
-                            SIAMPEL-FREE
-                          </span>
-                        </div>
-                        <div style={{ fontSize: "1rem", color: "#eab308", fontWeight: 600 }}>
-                          Voucher #{String(voucherInfo.sequence).padStart(2, '0')} / 20
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "var(--text-tertiary)" }}>
-                          {userEmail}
-                        </div>
+                        gap: "8px",
+                        boxShadow: checking ? "none" : "0 4px 12px rgba(234, 179, 8, 0.4)",
+                        transition: "transform 0.2s"
+                      }}
+                      onMouseOver={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1.05)"; }}
+                      onMouseOut={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1)"; }}
+                    >
+                      {checking ? <Loader2 size={20} className="spin-animation" /> : <Gift size={20} />}
+                      {checking ? "Memproses..." : "Klaim Voucher Sekarang"}
+                    </button>
+                    {claimError && (
+                      <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
+                        {claimError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div id="voucher-card" style={{
+                  background: "linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%)",
+                  borderRadius: "16px",
+                  padding: "4px",
+                  boxShadow: "0 25px 50px -12px rgba(191, 149, 63, 0.4)",
+                  maxWidth: "400px",
+                  margin: "0 auto",
+                  color: "#3e2703",
+                  fontFamily: "system-ui, -apple-system, sans-serif"
+                }}>
+                  <div style={{
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))",
+                    border: "1px solid rgba(255,255,255,0.5)",
+                    borderRadius: "12px",
+                    padding: "30px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center"
+                  }}>
+                    <div style={{
+                      width: "60px",
+                      height: "60px",
+                      background: "#3e2703",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: "16px",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
+                    }}>
+                      <Coffee size={32} color="#FBF5B7" />
+                    </div>
+
+                    <h2 style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", margin: "0 0 4px 0", opacity: 0.8 }}>
+                      Exclusive Reward
+                    </h2>
+                    
+                    <h1 style={{ fontSize: "2.8rem", fontWeight: 900, margin: "0 0 20px 0", lineHeight: 1, letterSpacing: "-1px" }}>
+                      FREE<br/>DRINK
+                    </h1>
+
+                    <div style={{ width: "100%", height: "2px", background: "rgba(62, 39, 3, 0.1)", margin: "0 0 20px 0" }} />
+
+                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "20px", textAlign: "left" }}>
+                      <div style={{ flex: 1, paddingRight: "10px" }}>
+                        <p style={{ fontSize: "0.7rem", textTransform: "uppercase", fontWeight: 800, opacity: 0.6, margin: "0 0 4px 0", letterSpacing: "1px" }}>Issued To</p>
+                        <p style={{ fontSize: "0.9rem", fontWeight: 700, margin: 0, wordBreak: "break-all" }}>{userEmail}</p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <p style={{ fontSize: "0.7rem", textTransform: "uppercase", fontWeight: 800, opacity: 0.6, margin: "0 0 4px 0", letterSpacing: "1px" }}>Edition</p>
+                        <p style={{ fontSize: "1.1rem", fontWeight: 900, margin: 0 }}>#{String(voucherInfo.sequence).padStart(2, '0')}/20</p>
                       </div>
                     </div>
-                  )}
+
+                    <div style={{
+                      background: "#3e2703",
+                      color: "#FBF5B7",
+                      padding: "16px",
+                      borderRadius: "12px",
+                      width: "100%",
+                      fontSize: "1.4rem",
+                      fontWeight: 900,
+                      letterSpacing: "4px",
+                      boxShadow: "inset 0 2px 10px rgba(0,0,0,0.5)"
+                    }}>
+                      SIAMPEL-FREE
+                    </div>
+                    
+                    <p style={{ fontSize: "0.75rem", opacity: 0.8, fontWeight: 600, margin: "20px 0 0 0" }}>
+                      * Tunjukkan e-voucher ini ke kasir Siampel *
+                    </p>
+                  </div>
                 </div>
+              )}
               </div>
 
               {/* Download Button outside the card so it doesn't get captured in the image */}
