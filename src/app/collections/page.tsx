@@ -457,7 +457,7 @@ export default function CollectionsPage() {
                         </div>
                       </div>
                       <div className="grc-code">
-                        <span>{voucherInfo.code}</span>
+                        <span>{voucherCode || 'SIAMPEL-FREE'}</span>
                       </div>
                     </div>
                     <div className="grc-footer">SCAN AT SIAMPEL TERMINAL</div>
