@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { 
   ScanLine, Cuboid, Zap, 
   Layers, Globe2, Box, Cloud, MonitorSmartphone,
-  Mail, ArrowRight, Camera, Code, User, LogOut, Heart
+  Mail, Camera, User, Heart, Play, Compass, Crosshair
 } from "lucide-react";
 
 export default function Home() {
@@ -47,223 +47,368 @@ export default function Home() {
   };
 
   return (
-    <div style={{ position: "relative", zIndex: 10 }}>
-      {/* ===== NAVBAR ===== */}
-      <nav
-        className="navbar-container"
-        style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0,
-          zIndex: 50,
-          padding: "16px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "var(--background)",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
-        }}
-      >
-        <div className="container-custom" style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div className="nav-brand" style={{ display: "flex", alignItems: "center", gap: "10px", fontWeight: 700, fontSize: "1.1rem" }}>
-            <Cuboid color="var(--primary)" size={24} />
-            <span style={{ color: "var(--text-primary)" }}>AR SIAMPEL</span>
+    <div className="game-hub">
+      {/* Background Ambience */}
+      <div className="hub-bg">
+        <div className="hub-grid"></div>
+        <div className="hub-glow-cyan"></div>
+        <div className="hub-glow-purple"></div>
+      </div>
+
+      {/* ===== HUD NAVBAR ===== */}
+      <nav className="hud-navbar">
+        <div className="hud-nav-inner">
+          <div className="hud-brand">
+            <Cuboid className="brand-icon" size={20} />
+            <span>AR_SIAMPEL</span>
           </div>
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div className="hud-nav-links">
             {session ? (
-              <Link href="/collections" className="btn-secondary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                <Heart size={16} /> Koleksi
+              <Link href="/collections" className="hud-btn-outline">
+                <Heart size={14} /> KOLEKSI
               </Link>
             ) : (
-              <Link href="/auth" className="btn-secondary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
-                Masuk
+              <Link href="/auth" className="hud-btn-outline">
+                MASUK_SISTEM
               </Link>
             )}
-            <Link href="/create" className="btn-primary nav-btn" style={{ padding: "8px 16px", fontSize: "0.9rem" }}>
-              Buat AR
+            <Link href="/create" className="hud-btn-primary">
+              <Box size={14} /> BUAT_AR
             </Link>
           </div>
         </div>
       </nav>
 
-      <main>
-        {/* ===== HERO SECTION ===== */}
-        <section style={{ minHeight: "90vh", display: "flex", alignItems: "center", paddingTop: "100px", paddingBottom: "60px" }}>
-          <div className="container-custom">
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
-              gap: "40px", 
-              alignItems: "center" 
-            }}>
-              
-              {/* Hero Content - Kolom Kiri */}
-              <motion.div initial="hidden" animate="visible" variants={staggerContainer} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                <motion.div variants={fadeInUp}>
-                  <span style={{ 
-                    display: "inline-block", 
-                    padding: "6px 12px", 
-                    background: "rgba(59, 130, 246, 0.1)", 
-                    color: "var(--primary)", 
-                    borderRadius: "100px", 
-                    fontSize: "0.85rem", 
-                    fontWeight: 600,
-                    marginBottom: "8px"
-                  }}>
-                    <span style={{ color: "var(--primary)", fontWeight: 600 }}>WebAR • Tanpa Instalasi</span>
-                  </span>
-                </motion.div>
-
-                <motion.h1 variants={fadeInUp} style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 800, lineHeight: 1.2, letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "24px" }}>
-                  Pengalaman Augmented Reality
-                </motion.h1>
-
-                <motion.p variants={fadeInUp} style={{ fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "480px" }}>
-                  Scan QR Code dan nikmati pengalaman 3D interaktif langsung melalui smartphone Anda. Instan, ringan, dan mendukung lintas platform.
-                </motion.p>
-
-                <motion.div variants={fadeInUp}>
-                  <div className="mobile-col" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                    <Link href="/ar" className="btn-primary hero-btn" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
-                      Mulai Pengalaman AR
-                    </Link>
-                    <Link href="#features" className="btn-secondary hero-btn" style={{ padding: "16px 32px", fontSize: "1.1rem" }}>
-                      Pelajari Lebih Lanjut
-                    </Link>
-                  </div>
-                </motion.div>
+      <main className="hub-main">
+        {/* ===== HERO / MAIN MENU ===== */}
+        <section className="menu-section">
+          <div className="menu-container">
+            
+            {/* Left: Titles & Actions */}
+            <motion.div 
+              className="menu-content"
+              initial="hidden" animate="visible" variants={staggerContainer}
+            >
+              <motion.div variants={fadeInUp} className="sys-status">
+                <div className="status-dot"></div>
+                SISTEM ONLINE // WEB_AR SIAP
               </motion.div>
 
-              {/* Hero QR Card - Kolom Kanan */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-                style={{ display: "flex", justifyContent: "center" }}
-              >
-                <div style={{ width: "100%", maxWidth: "380px" }}>
+              <motion.h1 variants={fadeInUp} className="game-title">
+                AUGMENTED<br/><span className="text-cyan">REALITY</span>
+              </motion.h1>
+
+              <motion.p variants={fadeInUp} className="game-desc">
+                Pindai kode portal untuk masuk ke dimensi 3D interaktif. Akses instan. Tanpa perlu instalasi aplikasi.
+              </motion.p>
+
+              <motion.div variants={fadeInUp} className="menu-actions">
+                <Link href="/ar" className="action-btn-main">
+                  <Play size={20} fill="currentColor" />
+                  MULAI PENGALAMAN
+                  <div className="btn-glow"></div>
+                </Link>
+                
+                <Link href="#missions" className="action-btn-sub">
+                  <Compass size={16} />
+                  LIHAT TUTORIAL
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            {/* Right: QR Portal */}
+            <motion.div 
+              className="menu-portal"
+              initial={{ opacity: 0, scale: 0.9 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="portal-container">
+                <div className="portal-header">
+                  <Crosshair size={14} /> <span>PORTAL_AKSES</span>
+                </div>
+                <div className="portal-core">
                   {arUrl ? (
                     <QRCodeDisplay url={arUrl} />
                   ) : (
-                    <div className="glass-card" style={{ padding: "60px", textAlign: "center", background: "white", color: "#333" }}>
-                      Memuat QR Code...
+                    <div className="portal-loading">
+                      <div className="spinner"></div>
+                      <span>MEMUAT...</span>
                     </div>
                   )}
                 </div>
-              </motion.div>
+                <div className="portal-footer">PINDAI UNTUK TERHUBUNG</div>
+              </div>
+            </motion.div>
 
-            </div>
           </div>
         </section>
 
-        {/* ===== HOW IT WORKS ===== */}
-        <section style={{ padding: "80px 0", background: "var(--bg-secondary)" }}>
-          <div className="container-custom">
-            <div style={{ textAlign: "center", marginBottom: "50px" }}>
-              <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-primary)" }}>Cara Kerjanya</h2>
-              <p style={{ color: "var(--text-tertiary)", marginTop: "10px" }}>Langkah sederhana memulai WebAR</p>
-            </div>
+        {/* ===== PROGRESSION / TUTORIAL ===== */}
+        <section id="missions" className="progression-section">
+          <div className="section-header">
+            <h2 className="section-title">MISI_TUTORIAL</h2>
+            <div className="title-line"></div>
+          </div>
+          
+          <div className="mission-path">
+            <div className="path-line"></div>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
-              {[
-                { icon: ScanLine, title: "1. Scan QR", desc: "Arahkan kamera HP ke layar untuk scan QR Code." },
-                { icon: Globe2, title: "2. Buka Link", desc: "Akses link dari browser tanpa download aplikasi." },
-                { icon: Camera, title: "3. Izinkan Kamera", desc: "Berikan izin kamera, lalu sorot gambar target." },
-                { icon: Cuboid, title: "4. Interaksi", desc: "Objek 3D akan melayang dan bisa disentuh!" }
-              ].map((step, idx) => (
-                <motion.div 
-                  key={idx}
-                  initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
-                  variants={fadeInUp}
-                  className="glass-card"
-                  style={{ padding: "30px", textAlign: "left", background: "var(--background)" }}
-                >
-                  <div style={{ color: "var(--primary)", marginBottom: "20px" }}>
-                    <step.icon size={32} />
+            {[
+              { num: "01", icon: ScanLine, title: "PINDAI PORTAL", desc: "Arahkan kamera untuk memindai QR Code" },
+              { num: "02", icon: Globe2, title: "BUKA TAUTAN", desc: "Akses web secara instan tanpa aplikasi" },
+              { num: "03", icon: Camera, title: "AKSES KAMERA", desc: "Berikan izin untuk membuka kamera" },
+              { num: "04", icon: Cuboid, title: "INTERAKSI 3D", desc: "Lihat objek melayang di dunia nyata" }
+            ].map((step, idx) => (
+              <motion.div 
+                key={idx}
+                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
+                variants={fadeInUp}
+                className="mission-node"
+              >
+                <div className="node-marker">
+                  <span className="node-num">{step.num}</span>
+                  <div className="node-icon-box">
+                    <step.icon size={20} />
                   </div>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "10px" }}>{step.title}</h3>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.5 }}>{step.desc}</p>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+                <div className="node-info">
+                  <h3>{step.title}</h3>
+                  <p>{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </section>
 
-        {/* ===== FEATURES GRID ===== */}
-        <section style={{ padding: "80px 0" }}>
-          <div className="container-custom">
-            <div style={{ textAlign: "center", marginBottom: "50px" }}>
-              <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-primary)" }}>Fitur Utama</h2>
-            </div>
+        {/* ===== FEATURES / ABILITIES ===== */}
+        <section className="abilities-section">
+          <div className="section-header">
+            <h2 className="section-title">KEMAMPUAN_SISTEM</h2>
+            <div className="title-line"></div>
+          </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-              {[
-                { icon: Zap, title: "Real Time AR", desc: "Pelacakan cepat dan mulus tanpa jeda dengan MindAR." },
-                { icon: Layers, title: "Image Tracking", desc: "Ubah poster atau kartu fisik menjadi marker interaktif." },
-                { icon: Box, title: "3D Model Support", desc: "Mendukung format standar GLB/GLTF dengan render kualitas tinggi." },
-                { icon: MonitorSmartphone, title: "Cross Platform", desc: "Berjalan di iOS, Android, dan Tablet langsung melalui browser." },
-                { icon: Cloud, title: "Cloud Integration", desc: "Sistem upload terpusat berbasis cloud menggunakan Vercel Blob." }
-              ].map((feature, idx) => (
-                <motion.div 
-                  key={idx}
-                  initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-                  className="glass-card"
-                  style={{ padding: "24px", display: "flex", gap: "20px", alignItems: "flex-start" }}
-                >
-                  <div style={{ color: "var(--accent)" }}>
-                    <feature.icon size={24} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "8px" }}>{feature.title}</h3>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.5 }}>{feature.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          <div className="ability-grid">
+            {[
+              { icon: Zap, title: "AR_REAL_TIME", desc: "Mesin pelacakan presisi tanpa jeda waktu", type: "pasif" },
+              { icon: Layers, title: "PELACAKAN_GAMBAR", desc: "Ubah poster/kartu fisik menjadi marker 3D", type: "aktif" },
+              { icon: Box, title: "RENDER_3D", desc: "Dukungan GLB/GLTF dengan visual berkualitas tinggi", type: "pasif" },
+              { icon: MonitorSmartphone, title: "LINTAS_PLATFORM", desc: "Berjalan lancar di ponsel, tablet, maupun PC", type: "pasif" },
+              { icon: Cloud, title: "SINKRONISASI_CLOUD", desc: "Penyimpanan aset terpusat di Vercel Blob", type: "aktif" }
+            ].map((ability, idx) => (
+              <motion.div 
+                key={idx}
+                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+                className={"ability-card " + (ability.type === "aktif" ? "active-ability" : "passive-ability")}
+              >
+                <div className="ability-icon-wrapper">
+                  <ability.icon size={24} className="ability-icon" />
+                </div>
+                <div className="ability-details">
+                  <div className="ability-type">SKILL {ability.type.toUpperCase()}</div>
+                  <h3 className="ability-name">{ability.title}</h3>
+                  <p className="ability-desc">{ability.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </section>
       </main>
 
-      {/* ===== FOOTER ===== */}
-      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "var(--bg-secondary)" }}>
-        <div className="container-custom mobile-col" style={{ padding: "40px 24px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "30px" }}>
-          <div style={{ maxWidth: "280px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "1.2rem", marginBottom: "12px" }}>
-              <Cuboid color="var(--primary)" size={24} />
-              <span>AR SIAMPEL 3D</span>
-            </div>
-            <p style={{ color: "var(--text-tertiary)", fontSize: "0.85rem", lineHeight: 1.6 }}>
-              Platform minimalis untuk pengalaman Web Augmented Reality yang cepat dan responsif.
-            </p>
+      {/* ===== COMPACT FOOTER ===== */}
+      <footer className="hud-footer">
+        <div className="footer-inner">
+          <div className="footer-sys-info">
+            <Cuboid size={14} className="text-cyan" />
+            <span>AR_SIAMPEL_v1.0 // KKN BEDAGUNG 26</span>
           </div>
-          
-          <div className="mobile-col" style={{ display: "flex", gap: "40px" }}>
-            <div>
-              <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "white", fontSize: "0.95rem" }}>Navigasi</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <Link href="/create" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Buat Target AR</Link>
-                <Link href="/ar" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.9rem" }}>Kamera AR</Link>
-              </div>
-            </div>
-            
-            <div>
-              <h4 style={{ fontWeight: 600, marginBottom: "12px", color: "white", fontSize: "0.95rem" }}>Sosial</h4>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <Link href="https://www.instagram.com/kkn_bedagung26/" target="_blank" rel="noopener noreferrer" className="btn-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                </Link>
-                <Link href="https://www.tiktok.com/@kknbedagung26" target="_blank" rel="noopener noreferrer" className="btn-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
-                </Link>
-                <Link href="#" className="btn-icon"><User size={16} /></Link>
-                <Link href="#" className="btn-icon"><Mail size={16} /></Link>
-              </div>
-            </div>
+          <div className="footer-links">
+            <Link href="https://www.instagram.com/kkn_bedagung26/" target="_blank" className="f-link">INSTAGRAM</Link>
+            <Link href="https://www.tiktok.com/@kknbedagung26" target="_blank" className="f-link">TIKTOK</Link>
           </div>
-        </div>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "16px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "0.8rem" }}>
-          © {new Date().getFullYear()} AR SIAMPEL. KKN DESA BEDAGUNG | ITSNU PEKALONGAN
         </div>
       </footer>
+
+      <style>{`
+        :root {
+          --bg-base: #030712;
+          --hud-cyan: #06b6d4;
+          --hud-cyan-dim: rgba(6, 182, 212, 0.2);
+          --hud-purple: #c026d3;
+          --hud-purple-dim: rgba(192, 38, 211, 0.2);
+          --hud-text: #e2e8f0;
+          --hud-muted: #64748b;
+          --hud-dark: rgba(15, 23, 42, 0.7);
+        }
+
+        .game-hub {
+          position: relative; z-index: 10;
+          font-family: ui-sans-serif, system-ui, sans-serif;
+          background: var(--bg-base); color: var(--hud-text);
+          min-height: 100vh; display: flex; flex-direction: column;
+        }
+
+        /* Ambient Background */
+        .hub-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .hub-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(1000px) rotateX(60deg) scale(2.5); transform-origin: top center; }
+        .hub-glow-cyan { position: absolute; top: -20%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%); filter: blur(60px); }
+        .hub-glow-purple { position: absolute; bottom: -20%; right: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(192, 38, 211, 0.1) 0%, transparent 70%); filter: blur(60px); }
+
+        /* HUD Navbar */
+        .hud-navbar {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+          background: var(--hud-dark); backdrop-filter: blur(12px); border-bottom: 1px solid var(--hud-cyan-dim);
+        }
+        .hud-nav-inner {
+          max-width: 1400px; margin: 0 auto; padding: 12px 24px;
+          display: flex; justify-content: space-between; align-items: center;
+        }
+        .hud-brand {
+          display: flex; align-items: center; gap: 10px;
+          font-family: monospace; font-weight: 800; font-size: 1.1rem; color: #fff; letter-spacing: 2px;
+        }
+        .brand-icon { color: var(--hud-cyan); }
+        .hud-nav-links { display: flex; gap: 16px; align-items: center; }
+        
+        .hud-btn-outline, .hud-btn-primary {
+          display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px;
+          font-family: monospace; font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: 0.2s;
+        }
+        .hud-btn-outline { background: transparent; border: 1px solid var(--hud-cyan-dim); color: var(--hud-cyan); }
+        .hud-btn-outline:hover { background: var(--hud-cyan-dim); color: #fff; border-color: var(--hud-cyan); }
+        .hud-btn-primary { background: var(--hud-cyan-dim); border: 1px solid var(--hud-cyan); color: #fff; box-shadow: inset 0 0 10px var(--hud-cyan-dim); }
+        .hud-btn-primary:hover { background: var(--hud-cyan); color: #000; box-shadow: 0 0 15px var(--hud-cyan); }
+
+        .hub-main { position: relative; z-index: 10; flex: 1; }
+        .text-cyan { color: var(--hud-cyan); }
+
+        /* Section Headers */
+        .section-header { margin-bottom: 40px; display: flex; align-items: center; gap: 16px; max-width: 1400px; margin-left: auto; margin-right: auto; padding: 0 24px; }
+        .section-title { font-family: monospace; font-size: 1.5rem; font-weight: 800; margin: 0; color: #fff; letter-spacing: 2px; }
+        .title-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--hud-cyan-dim), transparent); }
+
+        /* Hero / Menu */
+        .menu-section { min-height: 90vh; display: flex; align-items: center; padding: 120px 24px 60px; }
+        .menu-container { max-width: 1400px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 60px; align-items: center; }
+        
+        .sys-status { display: inline-flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.8rem; color: var(--hud-cyan); margin-bottom: 24px; background: var(--hud-cyan-dim); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(6,182,212,0.3); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hud-cyan); animation: blink 1.5s infinite; }
+        
+        .game-title { font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; margin: 0 0 24px 0; letter-spacing: -1px; text-transform: uppercase; }
+        .game-desc { font-size: 1.1rem; color: var(--hud-muted); line-height: 1.6; max-width: 480px; margin: 0 0 40px 0; font-family: monospace; }
+        
+        .menu-actions { display: flex; gap: 20px; flex-wrap: wrap; }
+        .action-btn-main {
+          position: relative; display: flex; align-items: center; gap: 10px; padding: 16px 32px;
+          background: var(--hud-cyan); color: #000; font-family: monospace; font-weight: 800; font-size: 1.1rem;
+          text-decoration: none; border: none; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+          transition: 0.2s;
+        }
+        .action-btn-main:hover { transform: scale(1.05); color: #000; }
+        .btn-glow { position: absolute; inset: 0; box-shadow: 0 0 20px var(--hud-cyan); opacity: 0; transition: 0.2s; pointer-events: none; }
+        .action-btn-main:hover .btn-glow { opacity: 1; }
+
+        .action-btn-sub {
+          display: flex; align-items: center; gap: 8px; padding: 16px 24px;
+          background: transparent; color: var(--hud-text); border: 1px solid var(--hud-cyan-dim);
+          font-family: monospace; font-weight: 700; font-size: 1rem; text-decoration: none; transition: 0.2s;
+          clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+        }
+        .action-btn-sub:hover { background: var(--hud-cyan-dim); border-color: var(--hud-cyan); color: #fff; }
+
+        /* QR Portal */
+        .menu-portal { display: flex; justify-content: center; }
+        .portal-container {
+          width: 100%; max-width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--hud-cyan-dim);
+          padding: 16px; border-radius: 8px; backdrop-filter: blur(8px);
+          box-shadow: 0 0 30px rgba(6,182,212,0.1), inset 0 0 20px rgba(6,182,212,0.05);
+        }
+        .portal-header { display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 0.8rem; color: var(--hud-cyan); margin-bottom: 16px; font-weight: 700; }
+        .portal-core { aspect-ratio: 1; background: #fff; border-radius: 4px; padding: 12px; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
+        .portal-core img { width: 100% !important; height: auto !important; }
+        .portal-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: #000; font-family: monospace; font-weight: 700; }
+        .spinner { width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid var(--hud-cyan); border-radius: 50%; animation: spin 1s linear infinite; }
+        .portal-footer { text-align: center; font-family: monospace; font-size: 0.75rem; color: var(--hud-muted); margin-top: 16px; letter-spacing: 1px; }
+
+        @media (max-width: 900px) {
+          .menu-container { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+          .sys-status { margin: 0 auto 24px; }
+          .game-desc { margin: 0 auto 40px; }
+          .menu-actions { justify-content: center; }
+        }
+
+        /* Progression / Tutorial */
+        .progression-section { padding: 40px 0 80px; }
+        .mission-path {
+          max-width: 1400px; margin: 0 auto; padding: 0 24px;
+          display: flex; justify-content: space-between; position: relative; gap: 20px;
+        }
+        .path-line {
+          position: absolute; top: 24px; left: 40px; right: 40px; height: 2px;
+          background: linear-gradient(90deg, var(--hud-cyan-dim) 0%, rgba(192, 38, 211, 0.2) 100%); z-index: 0;
+        }
+        
+        .mission-node { flex: 1; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .node-marker { position: relative; margin-bottom: 20px; }
+        .node-num { position: absolute; top: -16px; left: -16px; font-family: monospace; font-size: 2rem; font-weight: 900; color: rgba(255,255,255,0.05); }
+        .node-icon-box {
+          width: 50px; height: 50px; background: var(--bg-base); border: 2px solid var(--hud-cyan);
+          border-radius: 50%; display: flex; justify-content: center; align-items: center;
+          color: var(--hud-cyan); box-shadow: 0 0 15px var(--hud-cyan-dim);
+        }
+        .mission-node:nth-child(4) .node-icon-box, .mission-node:nth-child(5) .node-icon-box { border-color: var(--hud-purple); color: var(--hud-purple); box-shadow: 0 0 15px var(--hud-purple-dim); }
+        
+        .node-info h3 { font-family: monospace; font-size: 1.1rem; font-weight: 800; margin: 0 0 8px 0; color: #fff; }
+        .node-info p { font-size: 0.9rem; color: var(--hud-muted); margin: 0; line-height: 1.4; }
+
+        @media (max-width: 800px) {
+          .mission-path { flex-direction: column; gap: 40px; }
+          .path-line { top: 0; bottom: 0; left: 49px; right: auto; width: 2px; height: auto; background: linear-gradient(180deg, var(--hud-cyan-dim) 0%, rgba(192, 38, 211, 0.2) 100%); }
+          .mission-node { flex-direction: row; text-align: left; gap: 20px; }
+          .node-marker { margin-bottom: 0; }
+          .node-num { top: -10px; left: 40px; }
+        }
+
+        /* Abilities / Features */
+        .abilities-section { padding: 40px 0 100px; }
+        .ability-grid {
+          max-width: 1400px; margin: 0 auto; padding: 0 24px;
+          display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
+        }
+        
+        .ability-card {
+          background: rgba(15, 23, 42, 0.5); border: 1px solid var(--hud-cyan-dim);
+          border-radius: 8px; padding: 20px; display: flex; gap: 16px; align-items: flex-start;
+          transition: 0.2s; cursor: default;
+        }
+        .ability-card:hover { background: rgba(15, 23, 42, 0.8); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        
+        .active-ability { border-left: 3px solid var(--hud-cyan); }
+        .passive-ability { border-left: 3px solid var(--hud-purple); }
+
+        .ability-icon-wrapper {
+          width: 44px; height: 44px; background: rgba(0,0,0,0.5); border-radius: 8px;
+          display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+        }
+        .active-ability .ability-icon { color: var(--hud-cyan); }
+        .passive-ability .ability-icon { color: var(--hud-purple); }
+
+        .ability-details { flex: 1; }
+        .ability-type { font-family: monospace; font-size: 0.7rem; font-weight: 800; opacity: 0.5; margin-bottom: 6px; letter-spacing: 1px; }
+        .ability-name { font-family: monospace; font-size: 1.1rem; font-weight: 800; margin: 0 0 8px 0; color: #fff; }
+        .ability-desc { font-size: 0.9rem; color: var(--hud-muted); margin: 0; line-height: 1.5; }
+
+        /* Compact Footer */
+        .hud-footer { border-top: 1px solid var(--hud-cyan-dim); background: rgba(3, 7, 18, 0.9); padding: 16px 24px; }
+        .footer-inner { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .footer-sys-info { display: flex; align-items: center; gap: 10px; font-family: monospace; font-size: 0.8rem; color: var(--hud-muted); }
+        .footer-links { display: flex; gap: 16px; }
+        .f-link { color: var(--hud-muted); text-decoration: none; font-family: monospace; font-size: 0.8rem; font-weight: 700; transition: 0.2s; }
+        .f-link:hover { color: var(--hud-cyan); }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

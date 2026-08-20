@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowLeft, ShieldAlert, KeyRound, Terminal } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -60,81 +60,68 @@ export default function AuthPage() {
   };
 
   return (
-    <>
-      <div className="bg-gradient-animated" />
-      <div className="grid-overlay" />
-      <div className="noise-overlay" />
-      
-      <div style={{ position: "relative", zIndex: 10, minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-        
+    <div className="admin-layout">
+      {/* Game Menu Background Ambience */}
+      <div className="admin-bg">
+        <div className="bg-grid"></div>
+        <div className="bg-glow"></div>
+      </div>
+
+      <div className="admin-container">
         <motion.div 
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="glass-card"
-          style={{ width: "100%", maxWidth: "440px", padding: "48px 40px", borderRadius: "24px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="admin-panel"
         >
-          <div style={{ textAlign: "center", marginBottom: "40px" }}>
-            <h1 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: "8px", letterSpacing: "-0.02em" }}>
-              {isLogin ? "Selamat Datang" : "Buat Akun"}
+          {/* Header Section */}
+          <div className="panel-header">
+            <div className="security-icon-wrapper">
+              <ShieldAlert size={28} className="security-icon" />
+            </div>
+            <h1 className="panel-title">
+              {isLogin ? "LOGIN SISTEM" : "DAFTAR AKUN BARU"}
             </h1>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1rem" }}>
-              {isLogin ? "Masuk untuk melihat koleksi 3D Anda" : "Daftar untuk mulai mengoleksi model 3D"}
+            <p className="panel-desc">
+              {isLogin 
+                ? "Masukkan kredensial untuk mengakses Pusat Kontrol AR." 
+                : "Daftar untuk menjadi Administrator AR baru."}
             </p>
           </div>
 
-          <form onSubmit={handleAuth} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Form Section */}
+          <form onSubmit={handleAuth} className="panel-form">
             {error && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} style={{ padding: "14px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "12px", color: "#f87171", fontSize: "0.95rem", textAlign: "center", fontWeight: 500 }}>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="sys-msg error-msg">
                 {error}
               </motion.div>
             )}
 
             {message && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} style={{ padding: "14px", background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.3)", borderRadius: "12px", color: "#4ade80", fontSize: "0.95rem", textAlign: "center", fontWeight: 500 }}>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="sys-msg success-msg">
                 {message}
               </motion.div>
             )}
             
-            <div>
-              <label style={{ display: "block", marginBottom: "10px", fontSize: "0.95rem", color: "var(--text-secondary)", fontWeight: 600 }}>Email</label>
-              <div style={{ position: "relative" }}>
-                <Mail size={18} color="var(--text-tertiary)" style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)" }} />
+            <div className="input-group">
+              <label className="input-label">ALAMAT EMAIL</label>
+              <div className="input-slot">
+                <div className="slot-icon"><Mail size={16} /></div>
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
+                  placeholder="admin@system.net"
                   required
-                  style={{
-                    width: "100%",
-                    padding: "16px 20px 16px 48px",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "14px",
-                    color: "white",
-                    fontSize: "1rem",
-                    outline: "none",
-                    transition: "all 0.2s ease"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "var(--primary)";
-                    e.target.style.background = "rgba(255, 255, 255, 0.05)";
-                    e.target.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    e.target.style.background = "rgba(255, 255, 255, 0.03)";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="slot-field"
                 />
               </div>
             </div>
 
-            <div>
-              <label style={{ display: "block", marginBottom: "10px", fontSize: "0.95rem", color: "var(--text-secondary)", fontWeight: 600 }}>Password</label>
-              <div style={{ position: "relative" }}>
-                <Lock size={18} color="var(--text-tertiary)" style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)" }} />
+            <div className="input-group">
+              <label className="input-label">KATA SANDI</label>
+              <div className="input-slot">
+                <div className="slot-icon"><KeyRound size={16} /></div>
                 <input 
                   type="password" 
                   value={password}
@@ -142,82 +129,191 @@ export default function AuthPage() {
                   placeholder="••••••••"
                   required
                   minLength={6}
-                  style={{
-                    width: "100%",
-                    padding: "16px 20px 16px 48px",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "14px",
-                    color: "white",
-                    fontSize: "1rem",
-                    outline: "none",
-                    transition: "all 0.2s ease"
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "var(--primary)";
-                    e.target.style.background = "rgba(255, 255, 255, 0.05)";
-                    e.target.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    e.target.style.background = "rgba(255, 255, 255, 0.03)";
-                    e.target.style.boxShadow = "none";
-                  }}
+                  className="slot-field"
                 />
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="btn-primary" 
-              style={{ 
-                width: "100%", 
-                marginTop: "16px", 
-                padding: "16px", 
-                justifyContent: "center", 
-                fontSize: "1.05rem",
-                borderRadius: "14px",
-                boxShadow: "0 8px 20px -6px rgba(59, 130, 246, 0.5)"
-              }}
-            >
-              {loading ? "Memproses..." : (
-                <>{isLogin ? "Masuk" : "Daftar"} <ArrowRight size={20} /></>
-              )}
-            </button>
-
-            <div style={{ textAlign: "center", marginTop: "8px" }}>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem" }}>
-                {isLogin ? "Belum punya akun?" : "Sudah punya akun?"}{" "}
-                <button 
-                  type="button"
-                  onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}
-                  style={{ 
-                    background: "none", 
-                    border: "none", 
-                    color: "var(--primary)", 
-                    fontWeight: 600, 
-                    cursor: "pointer", 
-                    fontSize: "0.95rem",
-                    padding: 0
-                  }}
-                >
-                  {isLogin ? "Daftar Sekarang" : "Masuk"}
-                </button>
-              </p>
-            </div>
-
-            <div style={{ textAlign: "center", marginTop: "8px" }}>
-              <Link href="/" style={{ color: "var(--text-tertiary)", fontSize: "0.95rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px", transition: "color 0.2s" }}
-                onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-secondary)"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-tertiary)"}
+            <div className="action-group">
+              <button 
+                type="submit" 
+                disabled={loading}
+                className={"btn-enter " + (loading ? 'loading' : '')}
               >
-                <ArrowLeft size={16} /> Kembali ke Beranda
+                {loading ? (
+                  <span className="btn-text">MEMPROSES...</span>
+                ) : (
+                  <>
+                    <Terminal size={18} />
+                    <span className="btn-text">{isLogin ? "MASUK" : "DAFTAR"}</span>
+                    <ArrowRight size={18} className="btn-arrow" />
+                  </>
+                )}
+                <div className="btn-scanline"></div>
+              </button>
+
+              <div className="switch-mode-container">
+                <p className="switch-mode-text">
+                  {isLogin ? "Belum punya akses?" : "Sudah memiliki akses?"}{" "}
+                  <button 
+                    type="button"
+                    onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}
+                    className="btn-switch"
+                  >
+                    {isLogin ? "DAFTAR SEKARANG" : "KEMBALI LOGIN"}
+                  </button>
+                </p>
+              </div>
+
+              <Link href="/" className="btn-back">
+                <ArrowLeft size={14} /> KEMBALI KE BERANDA
               </Link>
             </div>
           </form>
         </motion.div>
       </div>
-    </>
+
+      <style>{`
+        :root {
+          --admin-bg: #020617;
+          --admin-panel: rgba(15, 23, 42, 0.75);
+          --admin-cyan: #06b6d4;
+          --admin-cyan-dim: rgba(6, 182, 212, 0.2);
+          --admin-text: #e2e8f0;
+          --admin-muted: #64748b;
+          --admin-border: rgba(6, 182, 212, 0.3);
+          --admin-error: #ef4444;
+          --admin-success: #10b981;
+        }
+
+        .admin-layout {
+          position: relative; z-index: 10;
+          font-family: ui-sans-serif, system-ui, sans-serif;
+          background: var(--admin-bg); color: var(--admin-text);
+          min-height: 100vh; display: flex; flex-direction: column;
+        }
+
+        /* Ambient Background */
+        .admin-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: radial-gradient(circle at 50% 0%, #0f172a 0%, var(--admin-bg) 70%); }
+        .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.6; }
+        .bg-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vw; background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 60%); filter: blur(80px); }
+
+        /* Centered Container */
+        .admin-container {
+          position: relative; z-index: 10;
+          flex: 1; display: flex; align-items: center; justify-content: center;
+          padding: 24px;
+        }
+
+        /* Login Panel */
+        .admin-panel {
+          width: 100%; max-width: 400px;
+          background: var(--admin-panel); backdrop-filter: blur(16px);
+          border: 1px solid var(--admin-border);
+          border-radius: 4px; /* Sharp corners for sci-fi look */
+          padding: 40px 32px;
+          box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(6, 182, 212, 0.05);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        /* Subtle corner accents */
+        .admin-panel::before, .admin-panel::after {
+          content: ''; position: absolute; width: 10px; height: 10px; border: 2px solid var(--admin-cyan);
+        }
+        .admin-panel::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .admin-panel::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+        /* Header */
+        .panel-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; text-align: center; }
+        .security-icon-wrapper {
+          width: 56px; height: 56px; background: rgba(0,0,0,0.5);
+          border: 1px solid var(--admin-cyan); border-radius: 50%;
+          display: flex; justify-content: center; align-items: center;
+          color: var(--admin-cyan); margin-bottom: 16px;
+          box-shadow: 0 0 15px var(--admin-cyan-dim), inset 0 0 10px var(--admin-cyan-dim);
+          animation: pulse 2s infinite;
+        }
+        .panel-title { font-family: monospace; font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 2px; margin: 0 0 8px 0; }
+        .panel-desc { font-family: monospace; font-size: 0.85rem; color: var(--admin-muted); margin: 0; line-height: 1.5; }
+
+        /* Form & Messages */
+        .panel-form { display: flex; flex-direction: column; gap: 24px; }
+        
+        .sys-msg { padding: 12px 16px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; text-align: center; font-weight: 700; letter-spacing: 0.5px; border-left: 3px solid; }
+        .error-msg { background: rgba(239, 68, 68, 0.1); border-color: var(--admin-error); color: #fca5a5; }
+        .success-msg { background: rgba(16, 185, 129, 0.1); border-color: var(--admin-success); color: #6ee7b7; }
+
+        /* Input Slots */
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-label { font-family: monospace; font-size: 0.75rem; font-weight: 700; color: var(--admin-cyan); letter-spacing: 1px; }
+        
+        .input-slot {
+          display: flex; align-items: center;
+          background: rgba(0,0,0,0.6);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 4px;
+          height: 48px;
+          transition: all 0.2s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .input-slot:focus-within { border-color: var(--admin-cyan); box-shadow: 0 0 10px var(--admin-cyan-dim); }
+        
+        .slot-icon { width: 48px; display: flex; justify-content: center; align-items: center; color: var(--admin-muted); border-right: 1px solid rgba(255,255,255,0.05); }
+        .input-slot:focus-within .slot-icon { color: var(--admin-cyan); border-color: var(--admin-cyan-dim); }
+        
+        .slot-field {
+          flex: 1; height: 100%; background: transparent; border: none; color: #fff;
+          padding: 0 16px; font-size: 1rem; font-family: monospace; outline: none;
+        }
+        .slot-field::placeholder { color: rgba(255,255,255,0.2); }
+
+        /* Actions */
+        .action-group { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+        
+        .btn-enter {
+          position: relative; overflow: hidden;
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+          width: 100%; height: 54px;
+          background: var(--admin-cyan-dim); border: 1px solid var(--admin-cyan);
+          color: var(--admin-cyan); font-family: monospace; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px;
+          cursor: pointer; transition: all 0.2s;
+        }
+        .btn-enter:hover:not(.loading) { background: var(--admin-cyan); color: #000; box-shadow: 0 0 20px var(--admin-cyan-dim); }
+        .btn-enter.loading { background: rgba(0,0,0,0.5); border-color: var(--admin-muted); color: var(--admin-muted); cursor: not-allowed; }
+        
+        .btn-text { z-index: 2; position: relative; }
+        .btn-arrow { transition: transform 0.2s; z-index: 2; position: relative; }
+        .btn-enter:hover:not(.loading) .btn-arrow { transform: translateX(4px); }
+        
+        .btn-scanline {
+          position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+          height: 10px; opacity: 0; transition: opacity 0.2s;
+        }
+        .btn-enter:hover:not(.loading) .btn-scanline { opacity: 1; animation: scan 1.5s linear infinite; }
+
+        /* Secondary Links */
+        .switch-mode-container { text-align: center; }
+        .switch-mode-text { font-family: monospace; font-size: 0.8rem; color: var(--admin-muted); margin: 0; }
+        .btn-switch {
+          background: none; border: none; padding: 0; margin-left: 4px;
+          font-family: monospace; font-weight: 700; color: var(--admin-cyan); cursor: pointer; text-decoration: underline; text-underline-offset: 4px;
+        }
+        .btn-switch:hover { color: #fff; }
+
+        .btn-back {
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          margin-top: 8px;
+          color: var(--admin-muted); font-family: monospace; font-size: 0.75rem; font-weight: 700;
+          text-decoration: none; transition: 0.2s; letter-spacing: 1px;
+        }
+        .btn-back:hover { color: #fff; }
+
+        /* Animations */
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--admin-cyan-dim), inset 0 0 10px var(--admin-cyan-dim); } 50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.4), inset 0 0 15px rgba(6, 182, 212, 0.4); } }
+        @keyframes scan { 0% { transform: translateY(-20px); } 100% { transform: translateY(60px); } }
+      `}</style>
+    </div>
   );
 }

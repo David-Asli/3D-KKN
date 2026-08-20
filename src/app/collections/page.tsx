@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye, Gift, Coffee, Sparkles, Download } from "lucide-react";
+import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye, Gift, Coffee, Sparkles, Download, CheckCircle2, Trophy, Heart, Medal, Star, Shield, Zap, Target, Smartphone, Layers, Clock, Filter } from "lucide-react";
 import html2canvas from "html2canvas";
 
 const ModelViewer = 'model-viewer' as any;
@@ -17,8 +17,39 @@ interface SavedTarget {
     id: string;
     image_url: string;
     model_url: string | null;
+    rarity?: string | null;
   };
 }
+
+const RARITIES = [
+  { name: "LEGENDARY", color: "#f59e0b", glow: "rgba(245, 158, 11, 0.6)", icon: Trophy },
+  { name: "EPIC", color: "#c026d3", glow: "rgba(192, 38, 211, 0.6)", icon: Star },
+  { name: "RARE", color: "#06b6d4", glow: "rgba(6, 182, 212, 0.6)", icon: Shield },
+  { name: "COMMON", color: "#10b981", glow: "rgba(16, 185, 129, 0.6)", icon: Medal },
+];
+
+const getRarity = (id: string, customRarity?: string | null) => {
+  if (customRarity && customRarity !== 'AUTO') {
+    const found = RARITIES.find(r => r.name === customRarity);
+    if (found) return found;
+  }
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const val = hash % 100;
+  if (val > 85) return RARITIES[0]; // Legendary 15%
+  if (val > 60) return RARITIES[1]; // Epic 25%
+  if (val > 25) return RARITIES[2]; // Rare 35%
+  return RARITIES[3]; // Common 25%
+};
+
+const getTargetName = (id: string) => {
+  const prefixes = ["Cyber", "Neon", "Void", "Quantum", "Plasma", "Aero", "Mecha", "Chrono"];
+  const suffixes = ["Core", "Pulse", "Wanderer", "Guardian", "Striker", "Phantom", "Spark", "Forge"];
+  const hash1 = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hash2 = id.split('').reverse().reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return prefixes[hash1 % prefixes.length] + " " + suffixes[hash2 % suffixes.length];
+};
+
+type FilterType = 'ALL' | 'FAVORITES' | 'RECENT' | 'LEGENDARY' | 'EPIC' | 'RARE' | 'COMMON';
 
 export default function CollectionsPage() {
   const [items, setItems] = useState<SavedTarget[]>([]);
@@ -29,6 +60,11 @@ export default function CollectionsPage() {
   const [voucherInfo, setVoucherInfo] = useState<{ claimed: boolean; sequence: number | null }>({ claimed: false, sequence: null });
   const [claimError, setClaimError] = useState("");
   const [checking, setChecking] = useState(false);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [maxVouchers, setMaxVouchers] = useState<number>(20);
+  const [voucherCode, setVoucherCode] = useState("SIAMPEL-FREE");
   const router = useRouter();
 
   const handleClaimVoucher = async () => {
@@ -36,13 +72,12 @@ export default function CollectionsPage() {
     try {
       const claimedBy = localStorage.getItem("siampel_voucher_claimed_by");
       if (claimedBy && claimedBy !== userEmail) {
-        setClaimError("Maaf, perangkat (HP) ini sudah pernah mengklaim voucher menggunakan akun lain.");
+        setClaimError("Maaf, perangkat ini sudah mengklaim reward dengan akun lain.");
         setChecking(false);
         return;
       }
 
-      // Check if user already claimed in DB
-      const { data: existingClaim, error: fetchErr } = await supabase
+      const { data: existingClaim } = await supabase
         .from("voucher_claims")
         .select("id")
         .eq("user_email", userEmail)
@@ -56,18 +91,16 @@ export default function CollectionsPage() {
         return;
       }
 
-      // If not claimed, check global quota
-      const { count, error: countErr } = await supabase
+      const { count } = await supabase
         .from("voucher_claims")
         .select("*", { count: 'exact', head: true });
 
-      if (count !== null && count >= 20) {
-        setClaimError("Maaf, kuota voucher (0/20) sudah habis diklaim.");
+      if (count !== null && count >= maxVouchers) {
+        setClaimError(`Maaf, kuota reward (${count}/${maxVouchers}) sudah habis.`);
         setChecking(false);
         return;
       }
 
-      // Try to claim
       const { data: newClaim, error: insertErr } = await supabase
         .from("voucher_claims")
         .insert([{ user_email: userEmail, device_id: 'browser' }])
@@ -75,7 +108,7 @@ export default function CollectionsPage() {
         .single();
 
       if (insertErr) {
-        if (insertErr.code === '23505') { // unique violation
+        if (insertErr.code === '23505') {
           const { data: retryClaim } = await supabase.from("voucher_claims").select("id").eq("user_email", userEmail).single();
           if (retryClaim) {
             localStorage.setItem("siampel_voucher_claimed_by", userEmail);
@@ -89,10 +122,9 @@ export default function CollectionsPage() {
         setVoucherInfo({ claimed: true, sequence: newClaim.id });
         setClaimError("");
       }
-
     } catch (e) {
       console.error(e);
-      setClaimError("Terjadi kesalahan saat mengklaim voucher.");
+      setClaimError("Gagal mengklaim reward.");
     } finally {
       setChecking(false);
     }
@@ -101,22 +133,20 @@ export default function CollectionsPage() {
   const handleDownload = async () => {
     const element = document.getElementById("voucher-card");
     if (!element) return;
-    
     try {
-      const canvas = await html2canvas(element, { backgroundColor: null, scale: 2 });
+      const canvas = await html2canvas(element, { backgroundColor: null, scale: 3 });
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `Voucher-Siampel-${userEmail}.png`;
+      link.download = "Reward-Siampel-" + userEmail + ".png";
       link.href = dataUrl;
       link.click();
     } catch (err) {
-      console.error("Failed to download voucher", err);
+      console.error("Failed to download", err);
     }
   };
 
   const fetchCollections = async (userId: string) => {
     try {
-      // Ambil total semua target AR yang ada di database
       const { count, error: countError } = await supabase
         .from("ar_targets")
         .select('*', { count: 'exact', head: true });
@@ -125,29 +155,26 @@ export default function CollectionsPage() {
         setTotalTargets(count);
       }
 
-      // Fetch user_collections with ar_targets data
       const { data, error } = await supabase
         .from("user_collections")
-        .select(`
-          id,
-          created_at,
-          ar_targets (
-            id,
-            image_url,
-            model_url
-          )
-        `)
+        .select("id, created_at, ar_targets (id, image_url, model_url, rarity)")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching collections:", error);
-      } else if (data) {
-        setItems(data as any);
-      }
+      if (!error && data) setItems(data as any);
     } catch (err) {
       console.error(err);
     } finally {
+      const { data: settingsData } = await supabase
+        .from("app_settings")
+        .select("*")
+        .eq("setting_key", "max_vouchers")
+        .single();
+        
+      if (settingsData && settingsData.setting_value) {
+        setMaxVouchers(parseInt(settingsData.setting_value));
+      }
+
       setLoading(false);
     }
   };
@@ -155,16 +182,13 @@ export default function CollectionsPage() {
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
         router.push("/auth");
         return;
       }
-
       setUserEmail(session.user.email || "");
       fetchCollections(session.user.id);
     };
-
     checkUser();
   }, [router]);
 
@@ -176,28 +200,49 @@ export default function CollectionsPage() {
 
   const handleRemove = async (collectionId: string) => {
     try {
-      const { error } = await supabase
-        .from("user_collections")
-        .delete()
-        .eq("id", collectionId);
-        
+      const { error } = await supabase.from("user_collections").delete().eq("id", collectionId);
       if (error) throw error;
-      
-      // Update state locally
       setItems(items.filter(item => item.id !== collectionId));
     } catch (err) {
-      console.error("Failed to remove item", err);
       alert("Gagal menghapus item dari koleksi.");
     }
   };
 
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const filteredItems = useMemo(() => {
+    let result = [...items];
+    if (activeFilter === 'FAVORITES') {
+      result = result.filter(item => favorites[item.id]);
+    } else if (activeFilter === 'RECENT') {
+      result = result.slice(0, 10);
+    } else if (['LEGENDARY', 'EPIC', 'RARE', 'COMMON'].includes(activeFilter)) {
+      result = result.filter(item => getRarity(item.ar_targets?.id || item.id, item.ar_targets?.rarity).name === activeFilter);
+    }
+    return result;
+  }, [items, activeFilter, favorites]);
+
+  const progressPercentage = totalTargets > 0 ? (items.length / totalTargets) * 100 : 0;
+  const isComplete = totalTargets > 0 && items.length >= totalTargets;
+
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#050510" }}>
-        <Loader2 size={40} className="spin-animation" style={{ color: "var(--primary)" }} />
+      <div className="loading-screen">
+        <div className="hud-loader">
+          <div className="loader-ring"></div>
+          <Zap size={32} className="loader-icon" />
+        </div>
+        <p className="loading-text">SYNCING INVENTORY...</p>
         <style>{`
-          .spin-animation { animation: spin 1s linear infinite; }
+          .loading-screen { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #030712; }
+          .hud-loader { position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+          .loader-ring { position: absolute; inset: 0; border: 3px solid transparent; border-top-color: #06b6d4; border-right-color: #c026d3; border-radius: 50%; animation: spin 1s linear infinite; }
+          .loader-icon { color: #fff; animation: pulse 1.5s infinite; filter: drop-shadow(0 0 10px #06b6d4); }
+          .loading-text { color: #06b6d4; font-family: monospace; font-weight: 700; font-size: 1.2rem; letter-spacing: 4px; animation: pulse 2s infinite; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         `}</style>
       </div>
     );
@@ -205,456 +250,465 @@ export default function CollectionsPage() {
 
   return (
     <>
-      {/* Load Google Model Viewer */}
-      <Script
-        type="module"
-        src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"
-        strategy="afterInteractive"
-      />
+      <Script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" strategy="afterInteractive" />
 
-      <div className="bg-gradient-animated" />
-      <div className="grid-overlay" />
+      <div className="game-bg">
+        <div className="grid-overlay"></div>
+        <div className="tech-lines"></div>
+      </div>
       
-      <div style={{ position: "relative", zIndex: 10, minHeight: "100vh", padding: "40px 24px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+      <div className="game-layout">
+        
+        {/* HUD Top Nav */}
+        <nav className="hud-nav">
+          <Link href="/" className="nav-btn text-cyan-400">
+            <ArrowLeft size={18} />
+            <span className="hide-mobile">EXIT</span>
+          </Link>
           
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "40px", flexWrap: "wrap", gap: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <Link href="/" className="btn-icon" style={{ textDecoration: "none" }}>
-                <ArrowLeft size={20} />
-              </Link>
-              <span style={{ fontWeight: 600, color: "var(--text-secondary)" }}>Kembali ke Beranda</span>
+          <div className="nav-center">
+            <div className="hud-badge"><Shield size={14} className="badge-icon" /> {userEmail}</div>
+          </div>
+
+          <button onClick={handleLogout} className="nav-btn text-red-400">
+            <span className="hide-mobile">LOGOUT</span>
+            <LogOut size={16} />
+          </button>
+        </nav>
+
+        <div className="inventory-container">
+          
+          {/* Sidebar Filters */}
+          <aside className="inventory-sidebar">
+            <div className="sidebar-header">
+              <Filter size={16} /> FILTERS
             </div>
             
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>{userEmail}</span>
-              <button onClick={handleLogout} className="btn-secondary" style={{ padding: "8px 16px", gap: "8px", fontSize: "0.9rem" }}>
-                <LogOut size={16} /> Keluar
+            <div className="filter-group">
+              <button className={"filter-btn " + (activeFilter === 'ALL' ? 'active' : '')} onClick={() => setActiveFilter('ALL')}>
+                <Layers size={16} /> ALL ITEMS <span className="count">{items.length}</span>
+              </button>
+              <button className={"filter-btn " + (activeFilter === 'FAVORITES' ? 'active' : '')} onClick={() => setActiveFilter('FAVORITES')}>
+                <Heart size={16} /> FAVORITES
+              </button>
+              <button className={"filter-btn " + (activeFilter === 'RECENT' ? 'active' : '')} onClick={() => setActiveFilter('RECENT')}>
+                <Clock size={16} /> RECENT
               </button>
             </div>
-          </div>
 
-          <div style={{ marginBottom: "40px" }}>
-            <h1 className="gradient-text-primary" style={{ fontSize: "clamp(2rem, 3vw, 2.5rem)", fontWeight: 800, marginBottom: "8px", letterSpacing: "-0.02em" }}>
-              Koleksi 3D Saya
-            </h1>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem" }}>
-              Kumpulan objek AR dan model 3D favorit yang Anda temukan.
-            </p>
-          </div>
-
-          {/* VOUCHER UI */}
-          {totalTargets > 0 && items.length >= totalTargets && (
-            <div className="fade-in" style={{ marginBottom: "40px" }}>
-              {!voucherInfo.claimed ? (
-                <div style={{
-                  background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-                  borderRadius: "20px",
-                  padding: "2px",
-                  position: "relative",
-                  overflow: "hidden",
-                  boxShadow: "0 20px 40px -15px rgba(234, 179, 8, 0.3)"
-                }}>
-                  {/* Animated glowing border effect */}
-                  <div style={{
-                    position: "absolute",
-                    top: "-50%",
-                    left: "-50%",
-                    width: "200%",
-                    height: "200%",
-                    background: "conic-gradient(from 0deg, transparent 0 340deg, #eab308 360deg)",
-                    animation: "spin 4s linear infinite",
-                    zIndex: 0
-                  }} />
-                  
-                  <div style={{
-                    background: "linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98))",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: "18px",
-                    padding: "32px 24px",
-                    position: "relative",
-                    zIndex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    border: "1px solid rgba(234, 179, 8, 0.2)"
-                  }}>
-                    <div style={{
-                      background: "rgba(234, 179, 8, 0.1)",
-                      padding: "16px",
-                      borderRadius: "50%",
-                      marginBottom: "16px",
-                      color: "#eab308",
-                      border: "1px solid rgba(234, 179, 8, 0.3)"
-                    }}>
-                      <Coffee size={40} />
-                    </div>
-                    
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <Sparkles size={20} color="#eab308" />
-                      <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#eab308", margin: 0 }}>
-                        Koleksi Lengkap!
-                      </h2>
-                      <Sparkles size={20} color="#eab308" />
-                    </div>
-                    
-                    <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px", maxWidth: "500px" }}>
-                      Selamat! Anda telah menemukan semua karakter 3D. Tunjukkan layar ini ke kasir Siampel untuk mengklaim <strong>Voucher Gratis Minum</strong> Anda.
-                    </p>
-                    
-                    <button 
-                      onClick={handleClaimVoucher}
-                      disabled={checking}
-                      style={{
-                        background: checking ? "gray" : "linear-gradient(135deg, #eab308, #ca8a04)",
-                        color: "#0f172a",
-                        border: "none",
-                        padding: "16px 32px",
-                        borderRadius: "12px",
-                        fontSize: "1.1rem",
-                        fontWeight: 800,
-                        cursor: checking ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        boxShadow: checking ? "none" : "0 4px 12px rgba(234, 179, 8, 0.4)",
-                        transition: "transform 0.2s"
-                      }}
-                      onMouseOver={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1.05)"; }}
-                      onMouseOut={(e) => { if(!checking) e.currentTarget.style.transform = "scale(1)"; }}
-                    >
-                      {checking ? <Loader2 size={20} className="spin-animation" /> : <Gift size={20} />}
-                      {checking ? "Memproses..." : "Klaim Voucher Sekarang"}
-                    </button>
-                    {claimError && (
-                      <p style={{ color: "#ef4444", marginTop: "16px", fontSize: "0.95rem", fontWeight: 600, background: "rgba(239, 68, 68, 0.1)", padding: "12px", borderRadius: "8px" }}>
-                        {claimError}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div id="voucher-card" style={{
-                  background: "linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%)",
-                  borderRadius: "16px",
-                  padding: "4px",
-                  boxShadow: "0 25px 50px -12px rgba(191, 149, 63, 0.4)",
-                  maxWidth: "400px",
-                  margin: "0 auto",
-                  color: "#3e2703",
-                  fontFamily: "system-ui, -apple-system, sans-serif"
-                }}>
-                  <div style={{
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2))",
-                    border: "1px solid rgba(255,255,255,0.5)",
-                    borderRadius: "12px",
-                    padding: "30px 20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center"
-                  }}>
-                    <div style={{
-                      width: "60px",
-                      height: "60px",
-                      background: "#3e2703",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: "16px",
-                      boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-                    }}>
-                      <Coffee size={32} color="#FBF5B7" />
-                    </div>
-
-                    <h2 style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", margin: "0 0 4px 0", opacity: 0.8 }}>
-                      Exclusive Reward
-                    </h2>
-                    
-                    <h1 style={{ fontSize: "2.8rem", fontWeight: 900, margin: "0 0 20px 0", lineHeight: 1, letterSpacing: "-1px" }}>
-                      FREE<br/>DRINK
-                    </h1>
-
-                    <div style={{ width: "100%", height: "2px", background: "rgba(62, 39, 3, 0.1)", margin: "0 0 20px 0" }} />
-
-                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", marginBottom: "20px", textAlign: "left" }}>
-                      <div style={{ flex: 1, paddingRight: "10px" }}>
-                        <p style={{ fontSize: "0.7rem", textTransform: "uppercase", fontWeight: 800, opacity: 0.6, margin: "0 0 4px 0", letterSpacing: "1px" }}>Issued To</p>
-                        <p style={{ fontSize: "0.9rem", fontWeight: 700, margin: 0, wordBreak: "break-all" }}>{userEmail}</p>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <p style={{ fontSize: "0.7rem", textTransform: "uppercase", fontWeight: 800, opacity: 0.6, margin: "0 0 4px 0", letterSpacing: "1px" }}>Edition</p>
-                        <p style={{ fontSize: "1.1rem", fontWeight: 900, margin: 0 }}>#{String(voucherInfo.sequence).padStart(2, '0')}/20</p>
-                      </div>
-                    </div>
-
-                    <div style={{
-                      background: "#3e2703",
-                      color: "#FBF5B7",
-                      padding: "16px",
-                      borderRadius: "12px",
-                      width: "100%",
-                      fontSize: "1.4rem",
-                      fontWeight: 900,
-                      letterSpacing: "4px",
-                      boxShadow: "inset 0 2px 10px rgba(0,0,0,0.5)"
-                    }}>
-                      SIAMPEL-FREE
-                    </div>
-                    
-                    <p style={{ fontSize: "0.75rem", opacity: 0.8, fontWeight: 600, margin: "20px 0 0 0" }}>
-                      * Tunjukkan e-voucher ini ke kasir Siampel *
-                    </p>
-                  </div>
-                </div>
-              )}
-              {/* Download Button outside the card so it doesn't get captured in the image */}
-              {voucherInfo.claimed && (
+            <div className="sidebar-header mt-6">
+              <Sparkles size={16} /> RARITY
+            </div>
+            
+            <div className="filter-group">
+              {RARITIES.map(r => (
                 <button 
-                  onClick={handleDownload}
-                  style={{
-                    background: "rgba(255,255,255,0.1)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    padding: "12px 24px",
-                    borderRadius: "8px",
-                    fontSize: "1rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    margin: "16px auto 0",
-                    transition: "background 0.2s"
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
-                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                  key={r.name}
+                  className={"filter-btn " + (activeFilter === r.name as FilterType ? 'active' : '')} 
+                  onClick={() => setActiveFilter(r.name as FilterType)}
+                  style={{ '--f-color': r.color } as any}
                 >
-                  <Download size={18} />
-                  Unduh Gambar Voucher
+                  <r.icon size={16} color={r.color} /> {r.name}
                 </button>
-              )}
-            </div>
-          )}
-
-          {items.length === 0 ? (
-            <div className="glass-card fade-in" style={{ padding: "60px 20px", textAlign: "center", background: "rgba(255,255,255,0.02)" }}>
-              <Box size={48} color="var(--text-tertiary)" style={{ margin: "0 auto 16px" }} />
-              <h2 style={{ fontSize: "1.3rem", fontWeight: 600, marginBottom: "8px" }}>Belum ada koleksi</h2>
-              <p style={{ color: "var(--text-secondary)", maxWidth: "400px", margin: "0 auto 24px" }}>
-                Gunakan kamera AR untuk memindai target, lalu simpan model 3D favorit Anda ke dalam koleksi ini.
-              </p>
-              <Link href="/ar" className="btn-primary" style={{ display: "inline-flex", padding: "12px 24px" }}>
-                Buka Kamera AR
-              </Link>
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
-              {items.map((item) => (
-                <div key={item.id} className="glass-card fade-in" style={{ display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", padding: 0 }}>
-                  <div style={{ width: "100%", height: "220px", background: "rgba(0,0,0,0.4)", position: "relative" }}>
-                    <img 
-                      src={`/api/proxy-image?url=${encodeURIComponent(item.ar_targets?.image_url || "")}`} 
-                      alt="Target" 
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                    />
-                    
-                    {item.ar_targets?.model_url && (
-                      <div style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", padding: "6px 10px", borderRadius: "8px", fontSize: "0.8rem", color: "white", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <Box size={14} color="#00d4ff" /> 3D Model
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.85rem", color: "var(--text-tertiary)" }}>
-                        Disimpan: {new Date(item.created_at).toLocaleDateString("id-ID")}
-                      </span>
-                      <button 
-                        onClick={() => handleRemove(item.id)}
-                        style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", color: "#ff4444", padding: "8px", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}
-                        title="Hapus dari koleksi"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    
-                    <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
-                      {item.ar_targets?.model_url && (
-                        <button
-                          onClick={() => setViewingModel(item.ar_targets.model_url)}
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "8px",
-                            padding: "12px",
-                            background: "linear-gradient(135deg, #6c63ff, #00d4ff)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "10px",
-                            fontWeight: 600,
-                            fontSize: "0.9rem",
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                            boxShadow: "0 4px 12px rgba(108, 99, 255, 0.3)"
-                          }}
-                        >
-                          <Eye size={16} /> Lihat 3D
-                        </button>
-                      )}
-                      <Link 
-                        href="/ar"
-                        className="btn-primary" 
-                        style={{ flex: 1, justifyContent: "center", padding: "12px", fontSize: "0.9rem", textDecoration: "none", textAlign: "center", display: "flex", alignItems: "center", gap: "8px" }}
-                      >
-                        <RotateCcw size={16} /> AR
-                      </Link>
-                    </div>
-                  </div>
-                </div>
               ))}
             </div>
-          )}
+          </aside>
+
+          {/* Main Grid Area */}
+          <section className="inventory-main">
+            
+            {/* Top Bar: Progress & Reward */}
+            <header className="inventory-header">
+              <div className="progress-section">
+                <div className="progress-labels">
+                  <span className="progress-title">COLLECTION PROGRESS</span>
+                  <span className={"progress-count " + (isComplete ? "text-gold" : "")}>
+                    {items.length} / {totalTargets} {isComplete && "- COMPLETE!"}
+                  </span>
+                </div>
+                <div className="progress-bar-thin">
+                  <div className="progress-fill-thin" style={{ width: Math.min(100, progressPercentage) + "%" }}></div>
+                </div>
+              </div>
+              
+              {isComplete && (
+                <button className="small-reward-btn" onClick={() => setShowRewardModal(true)}>
+                  <Trophy size={18} />
+                  <span>VIEW REWARD</span>
+                </button>
+              )}
+            </header>
+
+            {/* Grid Slots */}
+            {filteredItems.length === 0 ? (
+              <div className="empty-inventory">
+                <Box size={48} className="empty-icon" />
+                <p>NO ITEMS FOUND</p>
+                {activeFilter !== 'ALL' && <button className="reset-btn" onClick={() => setActiveFilter('ALL')}>RESET FILTERS</button>}
+              </div>
+            ) : (
+              <div className="slot-grid">
+                {filteredItems.map((item, index) => {
+                  const rarity = getRarity(item.ar_targets?.id || item.id, item.ar_targets?.rarity);
+                  const itemName = getTargetName(item.ar_targets?.id || item.id);
+                  const isFav = favorites[item.id];
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="inventory-slot"
+                      style={{ '--r-color': rarity.color, '--r-glow': rarity.glow, animationDelay: (0.05 * (index % 10)) + "s" } as any}
+                    >
+                      <div className="slot-inner">
+                        {/* Background Image */}
+                        <img 
+                          src={"/api/proxy-image?url=" + encodeURIComponent(item.ar_targets?.image_url || "")} 
+                          alt="Item" 
+                          className="slot-img"
+                          loading="lazy"
+                        />
+                        <div className="slot-vignette"></div>
+
+                        {/* Top Right Mini Actions */}
+                        <div className="slot-mini-actions">
+                          <button onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }} className={"mini-btn " + (isFav ? 'fav-active' : '')}>
+                            <Heart size={14} fill={isFav ? rarity.color : "none"} color={isFav ? rarity.color : "#cbd5e1"} />
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); handleRemove(item.id); }} className="mini-btn del-btn">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+
+                        {/* Bottom Info Overlay */}
+                        <div className="slot-info">
+                          <div className="slot-name">{itemName}</div>
+                          <div className="slot-type">
+                            <Box size={10} /> 3D MODEL
+                          </div>
+                        </div>
+
+                        {/* Hover Overlay Actions */}
+                        <div className="slot-hover-overlay">
+                          <div className="slot-hover-actions">
+                            {item.ar_targets?.model_url && (
+                              <button 
+                                className="action-circle primary"
+                                onClick={() => setViewingModel(item.ar_targets!.model_url)}
+                                title="Inspect 3D"
+                              >
+                                <Eye size={20} />
+                              </button>
+                            )}
+                            <Link href="/ar" className="action-circle secondary" title="Launch AR">
+                              <Smartphone size={20} />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Empty Filler Slots for realistic look */}
+                {Array.from({ length: Math.max(0, 12 - filteredItems.length) }).map((_, i) => (
+                  <div key={"empty-"+i} className="inventory-slot empty">
+                    <div className="slot-inner"><div className="empty-pattern"></div></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
 
+      {/* Reward Modal */}
+      {showRewardModal && (
+        <div className="hud-modal-backdrop" onClick={(e) => { if(e.target === e.currentTarget) setShowRewardModal(false); }}>
+          <div className="reward-modal">
+            {!voucherInfo.claimed ? (
+              <div className="reward-claim-view">
+                <Trophy size={64} className="gold-icon pulse-anim" />
+                <h2>ACHIEVEMENT UNLOCKED</h2>
+                <p>You collected all items! Claim your physical reward.</p>
+                <button onClick={handleClaimVoucher} disabled={checking} className={"claim-btn " + (checking ? 'disabled' : '')}>
+                  {checking ? <Loader2 className="spin" size={20} /> : <Gift size={20} />}
+                  {checking ? "PROCESSING..." : "CLAIM REWARD"}
+                </button>
+                {claimError && <div className="error-text">{claimError}</div>}
+              </div>
+            ) : (
+              <div className="reward-ticket-view">
+                <div id="voucher-card" className="golden-reward-card">
+                  <div className="grc-inner">
+                    <div className="grc-header">
+                      <div className="grc-brand"><Coffee size={32} color="#fef08a" /></div>
+                      <div className="grc-type">LEGENDARY DROP</div>
+                    </div>
+                    <div className="grc-body">
+                      <h1 className="grc-prize">FREE<br/>DRINK</h1>
+                      <div className="grc-divider"></div>
+                      <div className="grc-stats">
+                        <div className="stat-block">
+                          <span className="stat-label">OWNER</span>
+                          <span className="stat-value truncate-email">{userEmail}</span>
+                        </div>
+                        <div className="stat-block text-right">
+                          <span className="stat-label">EDITION</span>
+                          <span className="stat-value highlight">#{String(voucherInfo.sequence).padStart(2, '0')}/{maxVouchers}</span>
+                        </div>
+                      </div>
+                      <div className="grc-code">
+                        <span>{voucherInfo.code}</span>
+                      </div>
+                    </div>
+                    <div className="grc-footer">SCAN AT SIAMPEL TERMINAL</div>
+                  </div>
+                </div>
+                <button onClick={handleDownload} className="download-btn"><Download size={16}/> SAVE REWARD</button>
+              </div>
+            )}
+            <button className="close-modal-btn" onClick={() => setShowRewardModal(false)}><X size={20}/></button>
+          </div>
+        </div>
+      )}
+
       {/* 3D Model Viewer Modal */}
       {viewingModel && (
-        <div 
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0, 0, 0, 0.85)",
-            backdropFilter: "blur(12px)",
-            padding: "20px",
-            animation: "modalFadeIn 0.3s ease-out"
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setViewingModel(null);
-          }}
-        >
-          <div style={{
-            width: "100%",
-            maxWidth: "700px",
-            height: "80vh",
-            maxHeight: "600px",
-            background: "rgba(20, 20, 30, 0.95)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: "24px",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(108, 99, 255, 0.15)"
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "16px 24px",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.08)"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Box size={20} color="#00d4ff" />
-                <span style={{ fontWeight: 600, fontSize: "1rem", color: "white" }}>3D Model Viewer</span>
+        <div className="hud-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setViewingModel(null); }}>
+          <div className="hud-modal">
+            <div className="hud-modal-header">
+              <div className="modal-title-group">
+                <Box size={20} className="text-cyan-400" />
+                <span>INSPECTION_MODE</span>
               </div>
-              <button
-                onClick={() => setViewingModel(null)}
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "none",
-                  color: "white",
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "background 0.2s"
-                }}
-              >
-                <X size={18} />
+              <button onClick={() => setViewingModel(null)} className="hud-close-btn">
+                <X size={20} />
               </button>
             </div>
-
-            {/* Model Viewer */}
-            <div style={{ flex: 1, position: "relative", background: "radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a14 100%)" }}>
+            <div className="hud-modal-body">
               {/* @ts-ignore */}
               <ModelViewer
-                src={viewingModel}
-                alt="3D Model"
-                auto-rotate
-                camera-controls
-                touch-action="pan-y"
-                shadow-intensity="1"
-                shadow-softness="0.5"
-                exposure="1.2"
-                environment-image="neutral"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  outline: "none",
-                  // @ts-ignore
-                  "--poster-color": "transparent",
-                }}
-              >
-                <div slot="progress-bar" style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: "4px",
-                  background: "rgba(255,255,255,0.05)"
-                }}>
-                  <div style={{
-                    height: "100%",
-                    background: "linear-gradient(90deg, #6c63ff, #00d4ff)",
-                    animation: "loadProgress 2s ease-in-out infinite"
-                  }} />
-                </div>
-              </ModelViewer>
+                src={viewingModel} alt="3D Model" auto-rotate camera-controls touch-action="pan-y" shadow-intensity="1"
+                environment-image="neutral" style={{ width: "100%", height: "100%", outline: "none", "--poster-color": "transparent" } as any}
+              />
+              <div className="hud-scanner-overlay"></div>
             </div>
-
-            {/* Modal Footer */}
-            <div style={{
-              padding: "14px 24px",
-              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              color: "var(--text-tertiary)",
-              fontSize: "0.85rem"
-            }}>
-              <RotateCcw size={14} />
-              <span>Geser untuk memutar • Cubit untuk zoom</span>
+            <div className="hud-modal-footer">
+              <RotateCcw size={14} /> <span>DRAG TO ROTATE // PINCH TO ZOOM</span>
             </div>
           </div>
         </div>
       )}
 
+      {/* Game Inventory Styles */}
       <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        :root {
+          --bg-game: #050b14;
+          --panel-bg: rgba(15, 23, 42, 0.6);
+          --hud-border: rgba(6, 182, 212, 0.3);
+          --hud-text: #cbd5e1;
+          --neon-cyan: #06b6d4;
+          --gold: #f59e0b;
         }
-        @keyframes loadProgress {
-          0% { width: 0%; }
-          50% { width: 70%; }
-          100% { width: 100%; }
+
+        /* Layout & Background */
+        .game-bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #0f172a 0%, var(--bg-game) 80%); overflow: hidden; pointer-events: none; }
+        .grid-overlay { position: absolute; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 30px 30px; opacity: 0.5; }
+        
+        .game-layout { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; font-family: ui-sans-serif, system-ui, sans-serif; }
+
+        /* Top HUD Nav */
+        .hud-nav {
+          position: sticky; top: 0; z-index: 50; background: rgba(5, 11, 20, 0.8); backdrop-filter: blur(8px);
+          border-bottom: 1px solid var(--hud-border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
         }
-        .spin-animation { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .nav-btn { display: flex; align-items: center; gap: 8px; font-family: monospace; font-weight: 700; text-decoration: none; cursor: pointer; background: none; border: none; transition: 0.2s; }
+        .nav-btn:hover { text-shadow: 0 0 8px currentColor; }
+        .text-cyan-400 { color: #22d3ee; } .text-red-400 { color: #f87171; }
+        .hud-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; color: var(--hud-text); border: 1px solid rgba(255,255,255,0.1); }
+        
+        @media (max-width: 600px) { .hide-mobile { display: none; } }
+
+        /* Main Container */
+        .inventory-container {
+          display: flex; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; gap: 24px;
+        }
+
+        /* Sidebar */
+        .inventory-sidebar {
+          width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px;
+        }
+        .sidebar-header { font-family: monospace; font-weight: 800; color: #fff; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-size: 0.9rem; }
+        .mt-6 { margin-top: 24px; }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        
+        .filter-btn {
+          background: transparent; border: 1px solid transparent; color: var(--hud-text);
+          display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px;
+          font-family: monospace; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-align: left; transition: 0.2s;
+        }
+        .filter-btn:hover { background: rgba(255,255,255,0.05); }
+        .filter-btn.active {
+          background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff;
+          box-shadow: inset 2px 0 0 var(--f-color, var(--neon-cyan));
+        }
+        .filter-btn .count { margin-left: auto; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
+
+        @media (max-width: 800px) {
+          .inventory-container { flex-direction: column; }
+          .inventory-sidebar { width: 100%; }
+          .filter-group { flex-direction: row; flex-wrap: wrap; }
+          .filter-btn { flex: 1; min-width: 120px; justify-content: center; }
+          .filter-btn .count { display: none; }
+        }
+
+        /* Main Area */
+        .inventory-main { flex: 1; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+        /* Top Progress Bar */
+        .inventory-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 16px 24px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); gap: 16px; flex-wrap: wrap; }
+        .progress-section { flex: 1; min-width: 200px; }
+        .progress-labels { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: monospace; font-size: 0.85rem; font-weight: 700; }
+        .progress-title { color: var(--hud-text); } .progress-count { color: #fff; } .text-gold { color: var(--gold); text-shadow: 0 0 8px var(--gold); }
+        
+        .progress-bar-thin { height: 4px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; }
+        .progress-fill-thin { height: 100%; background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); transition: 0.5s; }
+        
+        .small-reward-btn {
+          background: rgba(245, 158, 11, 0.1); border: 1px solid var(--gold); color: var(--gold);
+          padding: 8px 16px; border-radius: 4px; font-family: monospace; font-weight: 700; cursor: pointer;
+          display: flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .small-reward-btn:hover { background: var(--gold); color: #000; box-shadow: 0 0 15px rgba(245,158,11,0.5); }
+
+        /* Slot Grid */
+        .slot-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 12px;
+          align-content: start;
+        }
+        @media (max-width: 500px) { .slot-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* Slot Item */
+        .inventory-slot {
+          aspect-ratio: 1 / 1;
+          background: rgba(0,0,0,0.4);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 8px;
+          position: relative;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: slotPopIn 0.3s backwards;
+        }
+        .inventory-slot.empty { cursor: default; opacity: 0.5; border: 1px dashed rgba(255,255,255,0.1); }
+        .empty-pattern { position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); }
+
+        .inventory-slot:not(.empty):hover {
+          transform: scale(1.05);
+          z-index: 10;
+          border-color: var(--r-color);
+          box-shadow: 0 0 20px var(--r-glow), inset 0 0 15px var(--r-glow);
+        }
+
+        .slot-inner { position: absolute; inset: 4px; border-radius: 4px; overflow: hidden; background: #000; }
+        
+        .slot-img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+        .inventory-slot:hover .slot-img { transform: scale(1.1); filter: brightness(1.2); }
+        
+        .slot-vignette { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%); pointer-events: none; }
+
+        /* Mini Actions (Top Right) */
+        .slot-mini-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 5; opacity: 0; transition: 0.2s; }
+        .inventory-slot:hover .slot-mini-actions { opacity: 1; }
+        .mini-btn { width: 24px; height: 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; display: flex; justify-content: center; align-items: center; color: #fff; cursor: pointer; transition: 0.2s; }
+        .mini-btn:hover { background: rgba(255,255,255,0.2); }
+        .mini-btn.fav-active { opacity: 1; background: rgba(0,0,0,0.8); border-color: var(--r-color); }
+        .mini-btn.del-btn:hover { background: #ef4444; border-color: #f87171; }
+        .inventory-slot .fav-active { opacity: 1; } /* Always show if active */
+
+        /* Info Overlay (Bottom) */
+        .slot-info { position: absolute; bottom: 8px; left: 8px; right: 8px; z-index: 5; pointer-events: none; }
+        .slot-name { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.95rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px #000; line-height: 1.2; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .slot-type { display: flex; align-items: center; gap: 4px; font-family: monospace; font-size: 0.65rem; color: var(--r-color, var(--neon-cyan)); font-weight: 700; margin-top: 2px; }
+
+        /* Hover Overlay Actions (Center) */
+        .slot-hover-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.2s; backdrop-filter: blur(2px); }
+        .inventory-slot:hover .slot-hover-overlay { opacity: 1; }
+        
+        .slot-hover-actions { display: flex; gap: 12px; transform: translateY(10px); transition: 0.3s; }
+        .inventory-slot:hover .slot-hover-actions { transform: translateY(0); }
+        
+        .action-circle {
+          width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+          cursor: pointer; border: none; color: #fff; transition: 0.2s; text-decoration: none;
+        }
+        .action-circle.primary { background: rgba(6, 182, 212, 0.3); border: 2px solid var(--neon-cyan); color: var(--neon-cyan); }
+        .action-circle.primary:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); transform: scale(1.1); }
+        .action-circle.secondary { background: rgba(192, 38, 211, 0.3); border: 2px solid #e879f9; color: #e879f9; }
+        .action-circle.secondary:hover { background: #e879f9; color: #000; box-shadow: 0 0 15px #e879f9; transform: scale(1.1); }
+
+        /* Reward Modal */
+        .reward-modal { background: #0f172a; border: 2px solid var(--gold); border-radius: 12px; padding: 40px; position: relative; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(245,158,11,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .close-modal-btn { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--hud-text); cursor: pointer; transition: 0.2s; }
+        .close-modal-btn:hover { color: #fff; transform: scale(1.1); }
+        
+        .gold-icon { color: var(--gold); margin: 0 auto 20px; filter: drop-shadow(0 0 15px var(--gold)); }
+        .reward-modal h2 { font-family: monospace; font-size: 1.8rem; margin: 0 0 12px; color: #fff; letter-spacing: 1px; }
+        .reward-modal p { color: var(--hud-text); margin: 0 0 32px; font-size: 1.1rem; }
+        
+        .claim-btn { background: var(--gold); color: #000; border: none; padding: 14px 32px; border-radius: 6px; font-family: monospace; font-weight: 800; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(245,158,11,0.4); }
+        .claim-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 25px rgba(245,158,11,0.6); }
+        .claim-btn.disabled { background: #334155; color: #94a3b8; box-shadow: none; cursor: not-allowed; }
+        .error-text { color: #ef4444; margin-top: 16px; font-family: monospace; }
+
+        .reward-ticket-view { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+        .download-btn { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 4px; font-family: monospace; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .download-btn:hover { background: rgba(255,255,255,0.2); border-color: #fff; }
+
+        /* Ticket Design (Reused from previous) */
+        .golden-reward-card { background: linear-gradient(135deg, #fbbf24, #fef08a, #d97706, #fde047, #b45309); padding: 4px; border-radius: 12px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); color: #422006; }
+        .grc-inner { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.5)); border: 1px solid rgba(255,255,255,0.8); border-radius: 8px; padding: 24px; text-align: center; }
+        .grc-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
+        .grc-brand { width: 50px; height: 50px; background: #422006; border-radius: 8px; display: flex; justify-content: center; align-items: center; margin-bottom: 8px; transform: rotate(45deg); box-shadow: inset 0 2px 4px rgba(255,255,255,0.2); }
+        .grc-brand > * { transform: rotate(-45deg); }
+        .grc-type { font-family: monospace; font-weight: 800; letter-spacing: 2px; font-size: 0.8rem; }
+        .grc-prize { font-size: 2.8rem; font-weight: 900; line-height: 0.9; margin: 0 0 16px 0; }
+        .grc-divider { height: 2px; background: rgba(66, 32, 6, 0.2); margin: 0 0 16px 0; }
+        .grc-stats { display: flex; justify-content: space-between; margin-bottom: 20px; text-align: left; }
+        .stat-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+        .stat-label { font-family: monospace; font-size: 0.6rem; font-weight: 800; opacity: 0.6; }
+        .stat-value { font-weight: 700; font-size: 0.85rem; }
+        .truncate-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .stat-value.highlight { font-size: 1.1rem; font-weight: 900; }
+        .grc-code { background: #422006; color: #fef08a; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 1.2rem; font-weight: 900; letter-spacing: 3px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .grc-footer { margin-top: 16px; font-family: monospace; font-size: 0.65rem; font-weight: 700; opacity: 0.7; letter-spacing: 1px; }
+
+        /* Empty State */
+        .empty-inventory { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; color: var(--hud-text); text-align: center; }
+        .empty-icon { opacity: 0.3; margin-bottom: 16px; }
+        .empty-inventory p { font-family: monospace; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; }
+        .reset-btn { margin-top: 16px; background: transparent; border: 1px solid var(--hud-text); color: var(--hud-text); padding: 8px 16px; border-radius: 4px; font-family: monospace; cursor: pointer; transition: 0.2s; }
+        .reset-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+        /* Modal HUD (Viewer) */
+        .hud-modal-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(3, 7, 18, 0.9); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s; }
+        .hud-modal { width: 100%; max-width: 900px; height: 85vh; max-height: 750px; background: #0f172a; border: 1px solid var(--neon-cyan); display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(6, 182, 212, 0.1), inset 0 0 30px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .hud-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: rgba(6, 182, 212, 0.1); border-bottom: 1px solid rgba(6, 182, 212, 0.3); }
+        .modal-title-group { display: flex; align-items: center; gap: 10px; font-family: monospace; font-weight: 800; color: #fff; letter-spacing: 1px; }
+        .hud-close-btn { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
+        .hud-close-btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 10px var(--neon-cyan); }
+        .hud-modal-body { flex: 1; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+        .hud-scanner-overlay { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px) 0 0 / 50px 50px, linear-gradient(0deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px) 0 0 / 50px 50px; box-shadow: inset 0 0 100px rgba(0,0,0,0.8); }
+        .hud-modal-footer { padding: 8px 20px; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: center; align-items: center; gap: 10px; color: var(--neon-cyan); font-family: monospace; font-size: 0.75rem; letter-spacing: 2px; }
+
+        /* Utilities & Anim */
+        .spin { animation: spin 1s linear infinite; }
+        .pulse-anim { animation: pulseAnim 2s infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulseAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes slotPopIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </>
   );
