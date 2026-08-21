@@ -563,6 +563,72 @@ export default function Home() {
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Responsive Design Overrides */
+        .ability-grid {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        @media (max-width: 1024px) {
+          .mission-path { flex-direction: column; gap: 40px; }
+          .path-line { top: 0; bottom: 0; left: 59px; right: auto; width: 6px; height: auto; }
+          .mission-node { flex-direction: row; text-align: left; gap: 24px; }
+          .node-marker { margin-bottom: 0; }
+          .node-num { top: -5px; left: 45px; }
+        }
+
+        @media (max-width: 768px) {
+          .footer-inner {
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+          }
+          .footer-links {
+            justify-content: center;
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .hud-nav-inner {
+            padding: 8px 16px;
+          }
+          .hud-brand span {
+            font-size: 1.1rem;
+          }
+          .hud-nav-links {
+            gap: 8px;
+          }
+          .hud-btn-outline, .hud-btn-primary {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+          }
+          .menu-actions {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+            gap: 12px;
+          }
+          .action-btn-main, .action-btn-sub {
+            justify-content: center;
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1rem;
+          }
+          .social-buttons {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .social-btn {
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .hud-brand span {
+            display: none;
+          }
+        }
       `}</style>
     </div>
   );

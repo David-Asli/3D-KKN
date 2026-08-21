@@ -310,9 +310,17 @@ export default function AuthPage() {
         }
         .btn-back:hover { color: #fff; }
 
-        /* Animations */
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 15px var(--admin-cyan-dim), inset 0 0 10px var(--admin-cyan-dim); } 50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.4), inset 0 0 15px rgba(6, 182, 212, 0.4); } }
         @keyframes scan { 0% { transform: translateY(-20px); } 100% { transform: translateY(60px); } }
+
+        @media (max-width: 480px) {
+          .admin-container {
+            padding: 16px;
+          }
+          .admin-panel {
+            padding: 32px 20px;
+          }
+        }
       `}</style>
     </div>
   );

@@ -568,7 +568,10 @@ export default function CollectionsPage() {
         .nav-btn { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; text-decoration: none; cursor: pointer; background: none; border: none; transition: 0.2s; color: #475569; font-size: 1.1rem; }
         .nav-btn:hover { transform: scale(1.05); color: #1e3a8a; }
         .text-pink-400 { color: #db2777; } .text-red-400 { color: #ef4444; }
-        .hud-badge { display: flex; align-items: center; gap: 8px; background: #fff; padding: 8px 16px; border-radius: 50px; font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: #1e3a8a; border: 2px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 10px rgba(59,130,246,0.05); }
+        .hud-badge {
+          display: flex; align-items: center; gap: 8px; background: #fff; padding: 8px 16px; border-radius: 50px; font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: #1e3a8a; border: 2px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 10px rgba(59,130,246,0.05);
+          max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
         
         @media (max-width: 600px) { .hide-mobile { display: none; } }
 
@@ -778,6 +781,41 @@ export default function CollectionsPage() {
         @keyframes slotPopIn { from { opacity: 0; transform: scale(0.5) translateY(50px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Responsive Overrides */
+        @media (max-width: 1100px) {
+          .inventory-container { gap: 20px; padding: 24px 16px; }
+          .inventory-sidebar { width: 220px; }
+        }
+
+        @media (max-width: 800px) {
+          .hud-badge { max-width: 140px; }
+        }
+
+        @media (max-width: 600px) {
+          .hud-badge { max-width: 110px; font-size: 0.85rem; padding: 6px 12px; }
+          .inventory-header { flex-direction: column; align-items: stretch; padding: 16px; text-align: center; }
+          .small-reward-btn { justify-content: center; width: 100%; }
+          .slot-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; gap: 12px; }
+          .inventory-slot { border-radius: 16px; border-width: 2px; }
+          .slot-img { padding: 10px; }
+          .slot-name { font-size: 0.9rem; margin-bottom: 2px; }
+          .slot-type { font-size: 0.65rem; padding: 2px 8px; border-width: 1.5px; }
+          .mini-btn { width: 28px; height: 28px; }
+          .slot-mini-actions { top: 8px; right: 8px; gap: 4px; }
+          .reward-modal { padding: 24px 16px; border-radius: 20px; }
+          .reward-modal h2 { font-size: 1.6rem; }
+          .reward-modal p { font-size: 1rem; }
+          .claim-btn { padding: 12px 24px; font-size: 1.1rem; }
+          .hud-modal-backdrop { padding: 12px; }
+          .hud-modal { height: 90vh; border-radius: 16px; }
+          .hud-modal-header { padding: 12px 16px; }
+          .modal-title-group { font-size: 1rem; }
+        }
+
+        @media (max-width: 360px) {
+          .hud-badge { max-width: 90px; }
+        }
       `}</style>
     </>
   );
