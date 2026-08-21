@@ -479,7 +479,13 @@ export default function CreateAR() {
       {arUrl && (
         <div className="hud-modal-backdrop">
           <div className="success-modal">
-            <CheckCircle2 size={48} className="success-icon" />
+            <button 
+              onClick={() => { setArUrl(null); setSelectedImage(null); setSelectedModel(null); setTargetImagePreview(null); setSelectedRarity("AUTO"); }}
+              className="btn-close-x"
+            >
+              <X size={20} />
+            </button>
+            <CheckCircle2 size={36} className="success-icon" />
             <h2 className="success-title">TARGET GENERATED!</h2>
             <div className="qr-box">
               <QRCodeDisplay url={arUrl} targetImage={targetImagePreview || undefined} />
@@ -666,10 +672,12 @@ export default function CreateAR() {
         /* Modals */
         .hud-modal-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(3, 7, 18, 0.9); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s; }
         
-        .success-modal { background: #0f172a; border: 2px solid var(--neon-cyan); border-radius: 12px; padding: 32px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(6, 182, 212, 0.2); animation: popIn 0.3s; }
-        .success-icon { color: var(--neon-cyan); margin: 0 auto 16px; filter: drop-shadow(0 0 10px var(--neon-cyan)); }
-        .success-title { font-family: monospace; font-size: 1.5rem; color: #fff; margin: 0 0 24px; letter-spacing: 1px; }
-        .qr-box { background: #fff; padding: 16px; border-radius: 8px; display: inline-block; margin-bottom: 24px; }
+        .success-modal { background: #0f172a; border: 2px solid var(--neon-cyan); border-radius: 12px; padding: 24px; text-align: center; max-width: 400px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(6, 182, 212, 0.2); animation: popIn 0.3s; position: relative; }
+        .btn-close-x { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; color: #fff; cursor: pointer; transition: 0.2s; z-index: 10; }
+        .btn-close-x:hover { background: #ef4444; border-color: #fff; transform: scale(1.1) rotate(90deg); }
+        .success-icon { color: var(--neon-cyan); margin: 0 auto 12px; filter: drop-shadow(0 0 10px var(--neon-cyan)); }
+        .success-title { font-family: monospace; font-size: 1.25rem; color: #fff; margin: 0 0 16px; letter-spacing: 1px; }
+        .qr-box { background: transparent; display: inline-block; margin-bottom: 16px; width: 100%; }
         .btn-close-success { background: var(--neon-cyan); color: #000; border: none; width: 100%; padding: 12px; border-radius: 6px; font-family: monospace; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-close-success:hover { background: #fff; box-shadow: 0 0 15px var(--neon-cyan); }
 

@@ -60,12 +60,12 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
       style={{
         background: "white",
         borderRadius: "20px",
-        padding: "32px 24px",
+        padding: "20px 16px",
         textAlign: "center",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "20px",
+        gap: "16px",
         boxShadow: "0 8px 30px rgba(0, 0, 0, 0.08)",
         color: "#1F2937",
         width: "100%",
@@ -87,7 +87,7 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
         ref={qrRef}
         style={{
           background: "white",
-          padding: "16px",
+          padding: "12px",
           borderRadius: "16px",
           display: "inline-block",
           border: "1px solid #F3F4F6",
@@ -95,7 +95,7 @@ export default function QRCodeDisplay({ url, targetImage }: QRCodeDisplayProps) 
       >
         <QRCodeSVG
           value={url}
-          size={220}
+          size={160}
           level="M"
           bgColor="#ffffff"
           fgColor="#111827"
