@@ -12,10 +12,10 @@ import QRCodeDisplay from "../components/QRCodeDisplay";
 import { supabase } from "@/lib/supabase";
 
 const RARITIES = [
-  { name: "LEGENDARY", color: "#f59e0b", glow: "rgba(245, 158, 11, 0.6)", icon: Trophy },
-  { name: "EPIC", color: "#c026d3", glow: "rgba(192, 38, 211, 0.6)", icon: Star },
-  { name: "RARE", color: "#06b6d4", glow: "rgba(6, 182, 212, 0.6)", icon: Shield },
-  { name: "COMMON", color: "#10b981", glow: "rgba(16, 185, 129, 0.6)", icon: Medal },
+  { name: "LEGENDARY", color: "#fde047", glow: "rgba(253, 224, 71, 0.6)", icon: Trophy },
+  { name: "EPIC", color: "#f472b6", glow: "rgba(244, 114, 182, 0.6)", icon: Star },
+  { name: "RARE", color: "#60a5fa", glow: "rgba(96, 165, 250, 0.6)", icon: Shield },
+  { name: "COMMON", color: "#34d399", glow: "rgba(52, 211, 153, 0.6)", icon: Medal },
 ];
 
 const getRarity = (id: string, customRarity?: string | null) => {
@@ -60,6 +60,7 @@ export default function CreateAR() {
 
   const [maxVouchers, setMaxVouchers] = useState<string>("20");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsStatus, setSettingsStatus] = useState<{msg: string, type: 'success'|'error'} | null>(null);
 
   const router = useRouter();
 
@@ -86,13 +87,18 @@ export default function CreateAR() {
 
   const handleSaveSettings = async () => {
     setSavingSettings(true);
+    setSettingsStatus(null);
     const { error } = await supabase
       .from("app_settings")
       .upsert({ setting_key: "max_vouchers", setting_value: maxVouchers });
     
     setSavingSettings(false);
-    if (error) alert("Gagal menyimpan pengaturan: " + error.message);
-    else alert("Pengaturan kuota berhasil disimpan!");
+    if (error) {
+      setSettingsStatus({ msg: "Gagal menyimpan pengaturan: " + error.message, type: 'error' });
+    } else {
+      setSettingsStatus({ msg: "Pengaturan kuota berhasil disimpan!", type: 'success' });
+      setTimeout(() => setSettingsStatus(null), 3000);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -159,7 +165,7 @@ export default function CreateAR() {
     }
 
     setLoading(true);
-    setLoadingText("Menganalisis & Build Target AR (Sekitar 10 Detik)...");
+    setLoadingText("Menyiapkan Karakter AR... (Sekitar 10 Detik)");
     setError(null);
     setArUrl(null);
 
@@ -167,7 +173,7 @@ export default function CreateAR() {
       let cloudImageUrl = "";
       let cloudModelUrl = "";
 
-      setLoadingText("Mengunggah Poster ke Node Cloud...");
+      setLoadingText("Mengunggah Gambar ke Awan...");
 
       const formData = new FormData();
       formData.append("image", selectedImage);
@@ -183,7 +189,7 @@ export default function CreateAR() {
       cloudImageUrl = imgData.data.url;
 
       if (selectedModel) {
-        setLoadingText("Mengunggah Model 3D ke Storage...");
+        setLoadingText("Mengunggah 3D Model ke Awan...");
         
         try {
           const { upload } = await import('@vercel/blob/client');
@@ -197,7 +203,7 @@ export default function CreateAR() {
         }
       }
 
-      setLoadingText("Menyimpan ke Core Database...");
+      setLoadingText("Menyimpan ke Daftar Koleksi...");
 
       const { error: dbError } = await supabase
         .from("ar_targets")
@@ -246,7 +252,7 @@ export default function CreateAR() {
           </Link>
           
           <div className="nav-center">
-            <div className="hud-badge"><Cpu size={14} className="badge-icon" /> ADMIN CLOUD STUDIO</div>
+            <div className="hud-badge"><Cpu size={14} className="badge-icon" /> ADMIN PINUS SIAMPEL</div>
           </div>
 
           <button onClick={handleLogout} className="nav-btn text-red-400">
@@ -332,6 +338,12 @@ export default function CreateAR() {
             <div className="sidebar-header" style={{ marginTop: '24px' }}>
               <Settings size={16} /> PENGATURAN SISTEM
             </div>
+            
+            {settingsStatus && (
+              <div className={settingsStatus.type === 'success' ? "success-box" : "error-box"} style={{ marginTop: '8px' }}>
+                {settingsStatus.msg}
+              </div>
+            )}
             
             <div className="upload-group">
               <label className="upload-slot" style={{ flexDirection: "column", alignItems: "flex-start", gap: 8, cursor: "default" }}>
@@ -500,64 +512,65 @@ export default function CreateAR() {
       {/* Shared Game Inventory Styles */}
       <style>{`
         :root {
-          --bg-game: #050b14;
-          --panel-bg: rgba(15, 23, 42, 0.6);
-          --hud-border: rgba(6, 182, 212, 0.3);
-          --hud-text: #cbd5e1;
-          --neon-cyan: #06b6d4;
+          --panel-bg: rgba(255, 255, 255, 0.1);
+          --hud-border: rgba(255, 255, 255, 0.2);
+          --hud-text: #e2e8f0;
           --gold: #f59e0b;
         }
 
         /* Layout & Background */
-        .game-bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #0f172a 0%, var(--bg-game) 80%); overflow: hidden; pointer-events: none; }
-        .grid-overlay { position: absolute; inset: 0; background-image: linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px); background-size: 30px 30px; opacity: 0.5; }
+        .game-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .grid-overlay { position: absolute; inset: 0; background-image: radial-gradient(circle at 10px 10px, rgba(255,255,255,0.05) 2px, transparent 0); background-size: 40px 40px; }
         
-        .game-layout { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .game-layout { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; font-family: var(--font-sans); }
 
         /* Top HUD Nav */
         .hud-nav {
-          position: sticky; top: 0; z-index: 50; background: rgba(5, 11, 20, 0.8); backdrop-filter: blur(8px);
-          border-bottom: 1px solid var(--hud-border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+          position: sticky; top: 0; z-index: 50; background: rgba(30, 27, 75, 0.9); backdrop-filter: blur(10px);
+          border-bottom: 2px solid rgba(255,255,255,0.1); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .nav-btn { display: flex; align-items: center; gap: 8px; font-family: monospace; font-weight: 700; text-decoration: none; cursor: pointer; background: none; border: none; transition: 0.2s; }
-        .nav-btn:hover { text-shadow: 0 0 8px currentColor; }
-        .text-cyan-400 { color: #22d3ee; } .text-red-400 { color: #f87171; }
-        .hud-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; color: var(--hud-text); border: 1px solid rgba(255,255,255,0.1); }
+        .nav-btn { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; text-decoration: none; cursor: pointer; background: none; border: none; transition: 0.2s; color: white; font-size: 1.1rem; }
+        .nav-btn:hover { transform: scale(1.05); }
+        .text-cyan-400 { color: #60a5fa; } .text-red-400 { color: #f87171; }
+        .hud-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 50px; font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: white; border: 2px solid rgba(255,255,255,0.2); }
         
         @media (max-width: 600px) { .hide-mobile { display: none; } }
 
         /* Main Container */
         .inventory-container {
-          display: flex; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 24px; gap: 24px;
+          display: flex; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; padding: 32px 24px; gap: 32px;
         }
 
         /* Sidebar (Upload Form) */
-        .inventory-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); height: fit-content; }
-        .sidebar-header { font-family: monospace; font-weight: 800; color: #fff; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-size: 0.95rem; }
-        .sidebar-desc { font-size: 0.85rem; color: var(--hud-text); line-height: 1.5; margin: 0; }
+        .inventory-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg); padding: 24px; border-radius: 24px; border: 3px solid rgba(255,255,255,0.1); height: fit-content; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .sidebar-header { font-family: var(--font-display); font-weight: 700; color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-size: 1.2rem; }
+        .sidebar-desc { font-size: 0.9rem; color: var(--hud-text); line-height: 1.5; margin: 0; font-family: var(--font-sans); font-weight: 600; }
         
-        .error-box { background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; color: #fca5a5; padding: 12px; font-size: 0.85rem; font-family: monospace; border-radius: 4px; }
+        .error-box { background: rgba(239, 68, 68, 0.9); border: 2px solid #fff; color: #fff; padding: 12px; font-size: 0.85rem; font-family: var(--font-sans); font-weight: 700; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .success-box { background: rgba(34, 197, 94, 0.9); border: 2px solid #fff; color: #fff; padding: 12px; font-size: 0.85rem; font-family: var(--font-sans); font-weight: 700; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
         .upload-group { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-        .upload-slot { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.5); border: 1px dashed rgba(255,255,255,0.2); padding: 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-        .upload-slot:hover { border-color: var(--neon-cyan); background: rgba(255,255,255,0.05); }
+        .upload-slot { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); border: 2px dashed rgba(255,255,255,0.3); padding: 16px; border-radius: 16px; cursor: pointer; transition: 0.2s; }
+        .upload-slot:hover { border-color: #3b82f6; background: rgba(255,255,255,0.1); transform: translateY(-2px); }
         .slot-icon { color: var(--hud-text); }
-        .upload-slot:hover .slot-icon { color: var(--neon-cyan); }
+        .upload-slot:hover .slot-icon { color: #60a5fa; }
         .slot-text { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
-        .slot-label { font-family: monospace; font-size: 0.7rem; font-weight: 800; }
-        .slot-val { font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .text-cyan { color: var(--neon-cyan); }
-        .text-purple { color: #c026d3; }
-        .text-gold { color: var(--gold); }
-        .rarity-select { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 4px; font-family: monospace; outline: none; margin-top: 4px; cursor: pointer; }
-        .rarity-select:focus { border-color: var(--gold); }
+        .slot-label { font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; color: #fff; }
+        .slot-val { font-size: 0.85rem; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-sans); }
+        .text-cyan { color: #60a5fa; }
+        .text-purple { color: #f472b6; }
+        .text-gold { color: #fde047; }
+        .rarity-select { width: 100%; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2); color: #fff; padding: 10px; border-radius: 12px; font-family: var(--font-sans); font-weight: 700; outline: none; margin-top: 4px; cursor: pointer; transition: 0.2s; }
+        .rarity-select:focus { border-color: #3b82f6; }
         
-        .btn-generate { background: var(--neon-cyan); color: #000; border: none; padding: 14px; border-radius: 6px; font-family: monospace; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; margin-top: 12px; }
-        .btn-generate:hover:not(.disabled) { box-shadow: 0 0 15px var(--neon-cyan); transform: translateY(-2px); }
-        .btn-generate.disabled { background: rgba(255,255,255,0.1); color: var(--hud-text); cursor: not-allowed; }
+        .btn-generate { background: linear-gradient(180deg, #60a5fa, #3b82f6); color: #fff; border: 3px solid rgba(255,255,255,0.4); padding: 14px; border-radius: 50px; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: 16px; box-shadow: 0 6px 0 #1d4ed8; }
+        .btn-generate:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 0 8px 0 #1d4ed8, 0 10px 20px rgba(59,130,246,0.5); border-color: #fff; }
+        .btn-generate:active:not(.disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #1d4ed8; }
+        .btn-generate.disabled { background: #64748b; border-color: #94a3b8; box-shadow: 0 6px 0 #475569; color: #cbd5e1; cursor: not-allowed; }
         
         @media (max-width: 800px) {
-          .inventory-container { flex-direction: column; }
+          .inventory-container { flex-direction: column; padding: 16px; }
           .inventory-sidebar { width: 100%; }
         }
 
@@ -565,73 +578,75 @@ export default function CreateAR() {
         .inventory-main { flex: 1; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 
         /* Top Progress Bar */
-        .inventory-header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 16px 24px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); gap: 16px; flex-wrap: wrap; }
-        .progress-section { flex: 1; min-width: 200px; }
-        .progress-labels { display: flex; justify-content: space-between; margin-bottom: 8px; font-family: monospace; font-size: 0.85rem; font-weight: 700; }
-        .progress-title { color: var(--hud-text); } .progress-count { color: #fff; }
+        .inventory-header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 24px; border-radius: 24px; border: 3px solid rgba(255,255,255,0.1); gap: 20px; flex-wrap: wrap; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .progress-section { flex: 1; min-width: 250px; }
+        .progress-labels { display: flex; justify-content: space-between; margin-bottom: 12px; font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; }
+        .progress-title { color: #fff; } .progress-count { color: #fff; }
         
-        .progress-bar-thin { height: 4px; background: rgba(0,0,0,0.5); border-radius: 2px; overflow: hidden; }
-        .progress-fill-thin { height: 100%; background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); transition: 0.5s; }
+        .progress-bar-thin { height: 24px; background: rgba(0,0,0,0.3); border-radius: 50px; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+        .progress-fill-thin { height: 100%; background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6, #10b981, #fde047); background-size: 200% 100%; border-radius: 50px; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); animation: gradientMove 3s linear infinite; }
+        @keyframes gradientMove { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
         /* Loading & Empty States */
-        .loading-state { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; color: var(--neon-cyan); font-family: monospace; font-size: 1.1rem; gap: 16px; font-weight: 700; }
-        .empty-inventory { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; color: var(--hud-text); text-align: center; }
-        .empty-icon { opacity: 0.3; margin-bottom: 16px; }
-        .empty-inventory p { font-family: monospace; font-size: 1rem; font-weight: 700; letter-spacing: 1px; margin: 0; }
+        .loading-state { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; color: #fde047; font-family: var(--font-display); font-size: 1.2rem; gap: 16px; font-weight: 700; letter-spacing: 1px; }
+        .empty-inventory { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; background: rgba(255,255,255,0.05); border: 4px dashed rgba(255,255,255,0.2); border-radius: 24px; color: #fff; text-align: center; }
+        .empty-icon { opacity: 0.5; margin-bottom: 24px; color: #fde047; }
+        .empty-inventory p { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 16px; }
 
         /* Slot Grid */
         .slot-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 24px;
           align-content: start;
         }
-        @media (max-width: 500px) { .slot-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .slot-grid { grid-template-columns: repeat(1, 1fr); } }
 
-        /* Slot Item */
+        /* Character Cards */
         .inventory-slot {
-          aspect-ratio: 1 / 1.1; /* slightly taller for date */
-          background: rgba(0,0,0,0.4);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 8px;
+          aspect-ratio: 3 / 4;
+          background: rgba(255,255,255,0.05);
+          border: 4px solid var(--r-color, rgba(255,255,255,0.2));
+          border-radius: 24px;
           position: relative;
           cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          animation: slotPopIn 0.3s backwards;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: slotPopIn 0.4s backwards cubic-bezier(0.34, 1.56, 0.64, 1);
+          box-shadow: 0 8px 15px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.05);
+          overflow: hidden;
         }
         
         .inventory-slot:hover {
-          transform: scale(1.05);
+          transform: translateY(-8px) scale(1.02);
           z-index: 10;
-          border-color: var(--r-color);
-          box-shadow: 0 0 20px var(--r-glow), inset 0 0 15px var(--r-glow);
+          box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 30px var(--r-glow), inset 0 0 20px var(--r-glow);
         }
 
-        .slot-inner { position: absolute; inset: 4px; border-radius: 4px; overflow: hidden; background: #000; }
+        .slot-inner { position: absolute; inset: 0; border-radius: 20px; overflow: hidden; background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.4) 100%); }
         
-        .slot-img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .inventory-slot:hover .slot-img { transform: scale(1.1); filter: brightness(1.2); }
+        .slot-img { width: 100%; height: 100%; object-fit: contain; padding: 20px; transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
+        .inventory-slot:hover .slot-img { transform: scale(1.15) translateY(-5px); }
         
         .slot-vignette { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 30%, transparent 70%); pointer-events: none; }
 
         /* Top Layer & Actions */
-        .slot-top-layer { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 5; pointer-events: none; }
-        .active-badge { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.65rem; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-        .rarity-badge { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.6rem; font-weight: 800; display: flex; align-items: center; gap: 4px; border: 1px solid; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .slot-top-layer { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 5; pointer-events: none; }
+        .active-badge { background: rgba(16, 185, 129, 0.9); border: 2px solid #fff; color: #fff; padding: 4px 10px; border-radius: 50px; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4); }
+        .rarity-badge { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 6px 12px; border-radius: 50px; font-family: var(--font-sans); font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; gap: 6px; border: 2px solid; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
         .slot-mini-actions { margin-left: auto; opacity: 0; transition: 0.2s; pointer-events: auto; }
         .inventory-slot:hover .slot-mini-actions { opacity: 1; }
-        .mini-btn { width: 24px; height: 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; display: flex; justify-content: center; align-items: center; color: #fff; cursor: pointer; transition: 0.2s; }
-        .mini-btn.del-btn:hover { background: #ef4444; border-color: #f87171; }
+        .mini-btn { width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #fff; cursor: pointer; transition: 0.3s; backdrop-filter: blur(4px); }
+        .mini-btn.del-btn:hover { background: #ef4444; border-color: #fff; transform: scale(1.1); }
 
         /* Info Overlay (Bottom) */
-        .slot-info { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 5; pointer-events: none; }
-        .slot-name { font-family: monospace; font-size: 0.9rem; font-weight: 800; color: #fff; text-shadow: 0 1px 4px #000; line-height: 1.2; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .slot-type { display: flex; align-items: center; gap: 4px; font-family: monospace; font-size: 0.65rem; font-weight: 700; }
-        .slot-date { font-family: monospace; font-size: 0.6rem; color: var(--hud-text); margin-top: 4px; opacity: 0.8; }
+        .slot-info { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 5; pointer-events: none; text-align: center; }
+        .slot-name { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); line-height: 1.2; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .slot-type { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 800; background: var(--r-color); color: #fff; padding: 4px 10px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .slot-date { font-family: var(--font-sans); font-size: 0.7rem; color: #cbd5e1; margin-top: 6px; font-weight: 600; }
 
         /* Hover Overlay Actions (Center) */
-        .slot-hover-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.2s; backdrop-filter: blur(2px); }
+        .slot-hover-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; backdrop-filter: blur(3px); border-radius: 20px; }
         .inventory-slot:hover .slot-hover-overlay { opacity: 1; }
         
         .slot-hover-actions { display: flex; gap: 12px; transform: translateY(10px); transition: 0.3s; }
