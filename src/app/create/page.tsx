@@ -110,6 +110,25 @@ export default function CreateAR() {
     }
   };
 
+  const handleUpdateRarity = async (id: string, current: string) => {
+    const levels = ['COMMON', 'RARE', 'EPIC', 'LEGENDARY'];
+    const nextIndex = (levels.indexOf(current) + 1) % levels.length;
+    const nextRarity = levels[nextIndex];
+
+    // Optimistic UI update
+    setHistory(prev => prev.map(item => item.id === id ? { ...item, rarity: nextRarity } : item));
+
+    const { error } = await supabase
+      .from("ar_targets")
+      .update({ rarity: nextRarity })
+      .eq("id", id);
+      
+    if (error) {
+      alert("Gagal merubah kelangkaan: " + error.message);
+      fetchHistory();
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/logout", { method: "POST" });
@@ -418,8 +437,16 @@ export default function CreateAR() {
                         <div className="slot-hover-overlay">
                           <div className="slot-hover-actions">
                             <button 
+                              className="action-circle"
+                              style={{ background: 'rgba(255,255,255,0.1)', color: rarity.color, borderColor: rarity.color }}
+                              onClick={(e) => { e.stopPropagation(); handleUpdateRarity(item.id, item.rarity || 'COMMON'); }}
+                              title="Ubah Kelangkaan"
+                            >
+                              <rarity.icon size={20} />
+                            </button>
+                            <button 
                               className="action-circle danger"
-                              onClick={() => setItemToDelete(item.id)}
+                              onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); }}
                               title="Hapus Target"
                             >
                               <Trash2 size={20} />

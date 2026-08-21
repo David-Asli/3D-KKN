@@ -6,7 +6,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Box, Loader2, LogOut, Trash2, X, RotateCcw, Eye, Gift, Coffee, Sparkles, Download, CheckCircle2, Trophy, Heart, Medal, Star, Shield, Zap, Target, Smartphone, Layers, Clock, Filter } from "lucide-react";
-import html2canvas from "html2canvas";
+import { toPng } from 'html-to-image';
 
 const ModelViewer = 'model-viewer' as any;
 
@@ -134,8 +134,7 @@ export default function CollectionsPage() {
     const element = document.getElementById("voucher-card");
     if (!element) return;
     try {
-      const canvas = await html2canvas(element, { backgroundColor: null, scale: 3 });
-      const dataUrl = canvas.toDataURL("image/png");
+      const dataUrl = await toPng(element, { backgroundColor: 'transparent', pixelRatio: 3, skipFonts: false });
       const link = document.createElement("a");
       link.download = "Reward-Siampel-" + userEmail + ".png";
       link.href = dataUrl;
@@ -427,11 +426,11 @@ export default function CollectionsPage() {
             {!voucherInfo.claimed ? (
               <div className="reward-claim-view">
                 <Trophy size={64} className="gold-icon pulse-anim" />
-                <h2>ACHIEVEMENT UNLOCKED</h2>
-                <p>You collected all items! Claim your physical reward.</p>
+                <h2>PENCAPAIAN TERBUKA</h2>
+                <p>Anda telah mengumpulkan semua item! Klaim hadiah fisik Anda sekarang.</p>
                 <button onClick={handleClaimVoucher} disabled={checking} className={"claim-btn " + (checking ? 'disabled' : '')}>
                   {checking ? <Loader2 className="spin" size={20} /> : <Gift size={20} />}
-                  {checking ? "PROCESSING..." : "CLAIM REWARD"}
+                  {checking ? "MEMPROSES..." : "KLAIM HADIAH"}
                 </button>
                 {claimError && <div className="error-text">{claimError}</div>}
               </div>
@@ -441,18 +440,18 @@ export default function CollectionsPage() {
                   <div className="grc-inner">
                     <div className="grc-header">
                       <div className="grc-brand"><Coffee size={32} color="#fef08a" /></div>
-                      <div className="grc-type">LEGENDARY DROP</div>
+                      <div className="grc-type">ITEM SPESIAL</div>
                     </div>
                     <div className="grc-body">
-                      <h1 className="grc-prize">FREE<br/>DRINK</h1>
+                      <h1 className="grc-prize">MINUMAN<br/>GRATIS</h1>
                       <div className="grc-divider"></div>
                       <div className="grc-stats">
                         <div className="stat-block">
-                          <span className="stat-label">OWNER</span>
+                          <span className="stat-label">PEMILIK</span>
                           <span className="stat-value truncate-email">{userEmail}</span>
                         </div>
                         <div className="stat-block text-right">
-                          <span className="stat-label">EDITION</span>
+                          <span className="stat-label">EDISI</span>
                           <span className="stat-value highlight">#{String(voucherInfo.sequence).padStart(2, '0')}/{maxVouchers}</span>
                         </div>
                       </div>
@@ -460,10 +459,10 @@ export default function CollectionsPage() {
                         <span>{voucherCode || 'SIAMPEL-FREE'}</span>
                       </div>
                     </div>
-                    <div className="grc-footer">SCAN AT SIAMPEL TERMINAL</div>
+                    <div className="grc-footer">PINDAI DI KASIR SIAMPEL</div>
                   </div>
                 </div>
-                <button onClick={handleDownload} className="download-btn"><Download size={16}/> SAVE REWARD</button>
+                <button onClick={handleDownload} className="download-btn"><Download size={16}/> SIMPAN TIKET</button>
               </div>
             )}
             <button className="close-modal-btn" onClick={() => setShowRewardModal(false)}><X size={20}/></button>
